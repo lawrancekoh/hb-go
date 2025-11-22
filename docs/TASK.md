@@ -1,13 +1,13 @@
 # Task List
 
 - [/] Phase 1: Skeleton & Manual Entry <!-- id: 0 -->
-    - [ ] Initialize Vite React Project <!-- id: 1 -->
-        - [ ] Run `npm create vite@latest . -- --template react` <!-- id: 22 -->
-        - [ ] Run `npm install` <!-- id: 23 -->
-        - [ ] Run `npm install react-router-dom` <!-- id: 26 -->
-    - [ ] Setup Tailwind CSS <!-- id: 2 -->
-        - [ ] Run `npm install -D tailwindcss postcss autoprefixer` <!-- id: 24 -->
-        - [ ] Run `npx tailwindcss init -p` <!-- id: 25 -->
+    - [x] Initialize Vite React Project <!-- id: 1 -->
+        - [x] Run `npm create vite@latest . -- --template react` <!-- id: 22 -->
+        - [x] Run `npm install` <!-- id: 23 -->
+        - [x] Run `npm install react-router-dom` <!-- id: 26 -->
+    - [x] Setup Tailwind CSS <!-- id: 2 -->
+        - [x] Run `npm install -D tailwindcss postcss autoprefixer` <!-- id: 24 -->
+        - [x] Run `npx tailwindcss init -p` <!-- id: 25 -->
     - [ ] Create "Home" (Inbox) UI Layout <!-- id: 3 -->
     - [ ] Create "Transaction Form" UI <!-- id: 4 -->
     - [ ] Implement LocalStorage Service <!-- id: 5 -->
