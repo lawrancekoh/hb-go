@@ -1,0 +1,29 @@
+# Task List
+
+- [/] Phase 1: Skeleton & Manual Entry <!-- id: 0 -->
+    - [ ] Initialize Vite React Project <!-- id: 1 -->
+        - [ ] Run `npm create vite@latest . -- --template react` <!-- id: 22 -->
+        - [ ] Run `npm install` <!-- id: 23 -->
+        - [ ] Run `npm install react-router-dom` <!-- id: 26 -->
+    - [ ] Setup Tailwind CSS <!-- id: 2 -->
+        - [ ] Run `npm install -D tailwindcss postcss autoprefixer` <!-- id: 24 -->
+        - [ ] Run `npx tailwindcss init -p` <!-- id: 25 -->
+    - [ ] Create "Home" (Inbox) UI Layout <!-- id: 3 -->
+    - [ ] Create "Transaction Form" UI <!-- id: 4 -->
+    - [ ] Implement LocalStorage Service <!-- id: 5 -->
+    - [ ] Implement CSV Generator Logic <!-- id: 6 -->
+    - [ ] Implement "Export" function <!-- id: 7 -->
+- [ ] Phase 2: Data Settings <!-- id: 8 -->
+    - [ ] Create Settings UI <!-- id: 9 -->
+    - [ ] Implement .xhb File Parser <!-- id: 10 -->
+    - [ ] Persist Categories/Tags <!-- id: 11 -->
+    - [ ] Connect Dropdowns to Data <!-- id: 12 -->
+- [ ] Phase 3: The Eyes (OCR) <!-- id: 13 -->
+    - [ ] Integrate Tesseract.js <!-- id: 14 -->
+    - [ ] Build Camera/Image Input Component <!-- id: 15 -->
+    - [ ] Write Regex Logic <!-- id: 16 -->
+    - [ ] Add "Loading" states <!-- id: 17 -->
+- [ ] Phase 4: Polish & Deploy <!-- id: 18 -->
+    - [ ] Add App Icons (Manifest) <!-- id: 19 -->
+    - [ ] Configure GitHub Actions <!-- id: 20 -->
+    - [ ] Test Offline Mode <!-- id: 21 -->
