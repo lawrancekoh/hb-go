@@ -21,16 +21,19 @@ export const xhbParser = {
       });
     }
 
-    // Resolve category hierarchy
-    const resolvedCategories = categories.map(cat => {
-        if(cat.parent) {
-            const parentCat = categories.find(c => c.key === cat.parent);
-            if(parentCat) {
-                return `${parentCat.name}:${cat.name}`;
+    // Helper function to resolve full path recursively
+    const getFullPath = (cat, allCats) => {
+        if (cat.parent) {
+            const parentCat = allCats.find(c => c.key === cat.parent);
+            if (parentCat) {
+                return `${getFullPath(parentCat, allCats)}:${cat.name}`;
             }
         }
         return cat.name;
-    }).sort();
+    };
+
+    // Resolve category hierarchy
+    const resolvedCategories = categories.map(cat => getFullPath(cat, categories)).sort();
 
     // Extract Payees
     const payNodes = xmlDoc.getElementsByTagName("pay");
