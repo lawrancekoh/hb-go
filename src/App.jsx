@@ -1,18 +1,21 @@
-import { useState } from 'react'
+import { Routes, Route } from 'react-router-dom';
+import Layout from './components/Layout';
+import Home from './pages/Home';
+import Editor from './pages/Editor';
+import Settings from './pages/Settings';
+import Help from './pages/Help';
 
 function App() {
   return (
-    <div className="min-h-screen bg-gray-100 flex items-center justify-center">
-      <div className="bg-white p-8 rounded-lg shadow-md">
-        <h1 className="text-3xl font-bold text-blue-600 mb-4">
-          HB Go
-        </h1>
-        <p className="text-gray-700">
-          Project initialized successfully with Tailwind CSS!
-        </p>
-      </div>
-    </div>
-  )
+    <Layout>
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/editor/:id" element={<Editor />} />
+        <Route path="/settings" element={<Settings />} />
+        <Route path="/help" element={<Help />} />
+      </Routes>
+    </Layout>
+  );
 }
 
-export default App
+export default App;
