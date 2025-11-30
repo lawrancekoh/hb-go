@@ -53,17 +53,32 @@ function Editor() {
       const file = e.target.files[0];
       if (!file) return;
 
-      // Convert to Base64 for persistence
-      const reader = new FileReader();
-      reader.onloadend = async () => {
-          const base64String = reader.result;
-          setPreviewUrl(base64String);
+      setIsProcessing(true);
+      setOcrStatus('Initializing...');
 
-          setIsProcessing(true);
+      try {
+          let fileToProcess = file;
+          let previewData = null;
+
+          if (file.type === 'application/pdf') {
+              setOcrStatus('Converting PDF...');
+              const convertedImage = await ocrService.convertPdfToImage(file);
+              previewData = convertedImage;
+              fileToProcess = convertedImage; // Pass data URL to OCR
+          } else {
+              // Convert standard image to Base64 for persistence/preview
+              const reader = new FileReader();
+              const base64Promise = new Promise((resolve) => {
+                  reader.onloadend = () => resolve(reader.result);
+              });
+              reader.readAsDataURL(file);
+              previewData = await base64Promise;
+          }
+
+          setPreviewUrl(previewData);
           setOcrStatus('Initializing OCR...');
 
-          try {
-              const text = await ocrService.recognize(file, (m) => {
+          const text = await ocrService.recognize(fileToProcess, (m) => {
                   if (m.status === 'recognizing text') {
                       setOcrStatus(`Scanning: ${(m.progress * 100).toFixed(0)}%`);
                   } else {
@@ -89,8 +104,6 @@ function Editor() {
           } finally {
               setIsProcessing(false);
           }
-      };
-      reader.readAsDataURL(file);
   };
 
   const handleSubmit = async (e) => {
@@ -115,8 +128,7 @@ function Editor() {
 
               <input
                   type="file"
-                  accept="image/*"
-                  capture="environment"
+                  accept="image/*,application/pdf"
                   className="absolute inset-0 opacity-0 cursor-pointer"
                   onChange={handleImageUpload}
               />
