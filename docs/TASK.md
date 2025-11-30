@@ -28,3 +28,12 @@
     - [x] Configure GitHub Actions <!-- id: 20 -->
     - [x] Bugfix: Allow file upload on mobile (remove capture="environment") and add PDF support <!-- id: 22 -->
     - [ ] Test Offline Mode <!-- id: 21 -->
+- [ ] Phase 5: UI/UX Overhaul <!-- id: 27 -->
+    - [ ] Create Design System Document (Colors, Typography, Components) <!-- id: 28 -->
+    - [ ] Install UI Dependencies (Lucide Icons, clsx, etc.) <!-- id: 29 -->
+    - [ ] Create Reusable UI Components (Button, Card, Input, etc.) <!-- id: 30 -->
+    - [ ] Redesign Home (Inbox) Page <!-- id: 31 -->
+    - [ ] Redesign Editor (Capture) Page <!-- id: 32 -->
+    - [ ] Redesign Settings Page <!-- id: 33 -->
+    - [ ] Implement Dark Mode Support <!-- id: 34 -->
+    - [ ] Accessibility Verification (Audit) <!-- id: 35 -->
