@@ -73,7 +73,10 @@ function Layout({ children }) {
 
       {/* Footer */}
       <footer className="bg-slate-100 border-t border-slate-200 py-6 text-center text-slate-500 text-xs">
-        <p>HB Go • Offline PWA for HomeBank</p>
+        <p className="mb-2">HB Go • Offline PWA for <a href="https://www.gethomebank.org/" target="_blank" rel="noopener noreferrer" className="text-brand-600 hover:underline">HomeBank</a></p>
+        <p>
+          Find this app useful? <a href="https://paypal.me/lawrancekoh" target="_blank" rel="noopener noreferrer" className="text-brand-600 hover:underline font-medium">Buy me a coffee ☕</a>
+        </p>
       </footer>
     </div>
   );

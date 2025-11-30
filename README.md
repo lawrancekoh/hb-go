@@ -2,6 +2,15 @@
 
 HB Go is a Progressive Web Application (PWA) designed to capture receipts, parse details using local OCR, and export transactions for HomeBank.
 
+This application has been tested and is ready for use.
+
+## Co-Developers
+- **Lawrance Koh**
+- **Google Jules**
+
+## HomeBank
+HB Go is a companion app for [HomeBank](https://www.gethomebank.org/), a free software that will assist you to manage your personal accounting.
+
 ## Prerequisites
 
 - **Node.js**: v24.11.1 or higher
