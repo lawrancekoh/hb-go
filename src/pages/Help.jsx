@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { Card, CardHeader, CardTitle, CardContent } from '../components/ui/Card';
-import { ArrowLeft, BookOpen, Upload, Camera, Download } from 'lucide-react';
+import { ArrowLeft, BookOpen, Upload, Camera, Download, Smartphone, ShieldCheck } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 
 function Help() {
@@ -61,6 +61,53 @@ function Help() {
                 </p>
                 <p>
                     Save the file, then open HomeBank Desktop and go to <code>File &gt; Import</code>.
+                </p>
+            </CardContent>
+        </Card>
+
+        <Card>
+            <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                    <Smartphone className="h-5 w-5 text-brand-600" />
+                    Installation
+                </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4 text-slate-600">
+                <div>
+                  <h3 className="font-semibold text-slate-900 mb-1">iOS (Safari)</h3>
+                  <ol className="list-decimal list-inside space-y-1 pl-1">
+                    <li>Open app in Safari</li>
+                    <li>Tap <strong>Share</strong> (box with arrow)</li>
+                    <li>Tap <strong>Add to Home Screen</strong></li>
+                  </ol>
+                </div>
+                <div>
+                  <h3 className="font-semibold text-slate-900 mb-1">Android (Chrome)</h3>
+                  <ol className="list-decimal list-inside space-y-1 pl-1">
+                    <li>Open app in Chrome</li>
+                    <li>Tap <strong>Menu</strong> (three dots)</li>
+                    <li>Tap <strong>Install App</strong> or <strong>Add to Home screen</strong></li>
+                  </ol>
+                </div>
+            </CardContent>
+        </Card>
+
+        <Card>
+            <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                    <ShieldCheck className="h-5 w-5 text-brand-600" />
+                    Privacy
+                </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2 text-slate-600">
+                <p>
+                    <strong>Your data stays on your device.</strong>
+                </p>
+                <p>
+                    HB Go works completely offline. All your transactions and receipt images are stored locally in your browser's database.
+                </p>
+                <p>
+                    We do not require any login, and we do not collect or transmit your personal financial data to any external servers.
                 </p>
             </CardContent>
         </Card>
