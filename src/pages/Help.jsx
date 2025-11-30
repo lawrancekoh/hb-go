@@ -112,6 +112,16 @@ function Help() {
             </CardContent>
         </Card>
       </div>
+
+      <div className="text-center text-slate-500 text-sm mt-8 space-y-2">
+        <p>&copy; {new Date().getFullYear()} HB Go Contributors</p>
+        <p>
+            Developed by Lawrance Koh & Google Jules
+        </p>
+        <p>
+            Contact: <a href="mailto:lawrancekoh@gmail.com" className="text-brand-600 hover:underline">lawrancekoh@gmail.com</a>
+        </p>
+      </div>
     </div>
   );
 }
