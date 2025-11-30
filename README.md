@@ -58,3 +58,7 @@ HB Go is a web-based application. You can access it via your browser, or install
 3.  **Process**: The app will attempt to read the text from the receipt (OCR).
 4.  **Edit Details**: Verify and correct the transaction details (Date, Amount, Payee, Category).
 5.  **Export**: Save the transaction or export it to a format compatible with HomeBank.
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
