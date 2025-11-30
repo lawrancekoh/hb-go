@@ -14,14 +14,13 @@ This file contains persistent instructions and rules for the AI coding assistant
 
 Copy and paste the following prompt when resuming the project:
 
-> I am resuming the HB Go project. We have completed the Project Skeleton and Styling Setup (Phase 1).
+> I am resuming the HB Go project. We have completed Phases 1, 2, and 3, and most of Phase 4.
 >
 > **Current Status:**
-> - Project initialized with React + Vite.
-> - Tailwind CSS v3 configured and verified.
+> - Full functionality implemented (Home, Editor, Settings, CSV Export, OCR, PWA).
 > - `docs/TASK.md` is up to date.
 >
 > **Next Objective:**
-> - Create "Home" (Inbox) UI Layout.
+> - Complete Phase 4 verification (Test Offline Mode) and general polish/maintenance.
 >
 > Please review `docs/TASK.md` and `docs/AI_INSTRUCTIONS.md` before proceeding.
