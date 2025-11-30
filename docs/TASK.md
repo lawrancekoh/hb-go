@@ -26,4 +26,5 @@
 - [ ] Phase 4: Polish & Deploy <!-- id: 18 -->
     - [x] Add App Icons (Manifest) <!-- id: 19 -->
     - [x] Configure GitHub Actions <!-- id: 20 -->
+    - [x] Bugfix: Allow file upload on mobile (remove capture="environment") and add PDF support <!-- id: 22 -->
     - [ ] Test Offline Mode <!-- id: 21 -->
