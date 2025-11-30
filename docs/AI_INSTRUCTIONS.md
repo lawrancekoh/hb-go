@@ -14,13 +14,13 @@ This file contains persistent instructions and rules for the AI coding assistant
 
 Copy and paste the following prompt when resuming the project:
 
-> I am resuming the HB Go project. We have completed Phases 1, 2, and 3, and most of Phase 4.
+> I am resuming the HB Go project. We have completed Phases 1, 2, 3, and 4. We are currently working on **Phase 5: UI/UX Overhaul**.
 >
 > **Current Status:**
-> - Full functionality implemented (Home, Editor, Settings, CSV Export, OCR, PWA).
-> - `docs/TASK.md` is up to date.
+> - Design Overhaul Document created (`docs/DESIGN_OVERHAUL.md`).
+> - `docs/TASK.md` updated with Phase 5 tasks.
 >
 > **Next Objective:**
-> - Complete Phase 4 verification (Test Offline Mode) and general polish/maintenance.
+> - Begin implementation of the UI overhaul starting with installing dependencies and creating base components.
 >
-> Please review `docs/TASK.md` and `docs/AI_INSTRUCTIONS.md` before proceeding.
+> Please review `docs/TASK.md` and `docs/DESIGN_OVERHAUL.md` before proceeding.
