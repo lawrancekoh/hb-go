@@ -99,6 +99,7 @@ function Editor() {
 
               setFormData(prev => ({
                   ...prev,
+                  date: parsed.date || prev.date,
                   payee: parsed.merchant || prev.payee,
                   amount: parsed.amount || prev.amount,
                   time: parsed.time || prev.time,
