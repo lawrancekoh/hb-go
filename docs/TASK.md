@@ -38,3 +38,7 @@
     - [ ] Implement Dark Mode Support <!-- id: 34 -->
     - [ ] Accessibility Verification (Audit) <!-- id: 35 -->
     - [ ] Refine Home Page UX (Relocate FAB on desktop, improve empty state) <!-- id: 36 -->
+- [ ] Phase 6: Documentation & Final Touches <!-- id: 37 -->
+    - [ ] Update README with readiness status, HomeBank link, and credits <!-- id: 38 -->
+    - [ ] Add Persistent Footer with donation message and HomeBank link <!-- id: 39 -->
+    - [ ] Update Help page with copyright and contact details <!-- id: 40 -->
