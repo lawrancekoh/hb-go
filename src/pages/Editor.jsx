@@ -254,17 +254,20 @@ function Editor() {
 
               <div className="space-y-2">
                   <Label>Category</Label>
-                  <select
+                  <Input
+                    type="text"
                     name="category"
                     value={formData.category}
                     onChange={handleChange}
-                    className="flex h-10 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm ring-offset-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-600 focus-visible:ring-offset-2"
-                  >
-                    <option value="">Select Category</option>
+                    list="category-list"
+                    placeholder="Select or Type Category"
+                    autoComplete="off"
+                  />
+                  <datalist id="category-list">
                     {categories.map(cat => (
-                        <option key={cat} value={cat}>{cat}</option>
+                        <option key={cat} value={cat} />
                     ))}
-                  </select>
+                  </datalist>
               </div>
 
               <div className="space-y-2">
