@@ -32,8 +32,9 @@
     - [ ] Create Design System Document (Colors, Typography, Components) <!-- id: 28 -->
     - [ ] Install UI Dependencies (Lucide Icons, clsx, etc.) <!-- id: 29 -->
     - [ ] Create Reusable UI Components (Button, Card, Input, etc.) <!-- id: 30 -->
-    - [ ] Redesign Home (Inbox) Page <!-- id: 31 -->
-    - [ ] Redesign Editor (Capture) Page <!-- id: 32 -->
-    - [ ] Redesign Settings Page <!-- id: 33 -->
+    - [x] Redesign Home (Inbox) Page <!-- id: 31 -->
+    - [x] Redesign Editor (Capture) Page <!-- id: 32 -->
+    - [x] Redesign Settings Page <!-- id: 33 -->
     - [ ] Implement Dark Mode Support <!-- id: 34 -->
     - [ ] Accessibility Verification (Audit) <!-- id: 35 -->
+    - [ ] Refine Home Page UX (Relocate FAB on desktop, improve empty state) <!-- id: 36 -->
