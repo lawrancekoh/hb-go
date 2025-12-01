@@ -35,6 +35,7 @@
     - [x] Redesign Home (Inbox) Page <!-- id: 31 -->
     - [x] Redesign Editor (Capture) Page <!-- id: 32 -->
     - [x] Redesign Settings Page <!-- id: 33 -->
+    - [ ] Implement System OCR Option (Native/Tesseract Switch) <!-- id: 41 -->
     - [ ] Implement Dark Mode Support <!-- id: 34 -->
     - [ ] Accessibility Verification (Audit) <!-- id: 35 -->
     - [ ] Refine Home Page UX (Relocate FAB on desktop, improve empty state) <!-- id: 36 -->
