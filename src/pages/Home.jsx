@@ -72,16 +72,6 @@ function Home() {
                   <p className="text-brand-200 text-xs mt-2">{transactions.length} transactions</p>
               </div>
               <div className="flex gap-2">
-                {isAiEnabled && (
-                    <Button
-                        href="/editor/new"
-                        variant="secondary"
-                        size="sm"
-                        className="hidden md:inline-flex gap-2 bg-indigo-500/30 text-white hover:bg-indigo-500/50 border border-indigo-400/30"
-                    >
-                        <Sparkles className="h-4 w-4" /> Scan with AI
-                    </Button>
-                )}
                 <Button
                   href="/editor/new"
                   variant="secondary"

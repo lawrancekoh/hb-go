@@ -284,7 +284,7 @@ function Settings() {
                           />
                           <div>
                               <span className="font-medium text-slate-900 block">Auto (Recommended)</span>
-                              <span className="text-xs text-slate-500">Use System OCR if available, otherwise PaddleOCR.</span>
+                              <span className="text-xs text-slate-500">Use System OCR if available, with Tesseract as backup.</span>
                           </div>
                       </label>
                       <label className="flex items-center gap-3 p-3 border rounded-lg cursor-pointer hover:bg-slate-50">
@@ -299,20 +299,6 @@ function Settings() {
                           <div>
                               <span className="font-medium text-slate-900 block">System Only</span>
                               <span className="text-xs text-slate-500">Use device's native text detection. Fast but may vary by device.</span>
-                          </div>
-                      </label>
-                      <label className="flex items-center gap-3 p-3 border rounded-lg cursor-pointer hover:bg-slate-50">
-                          <input
-                              type="radio"
-                              name="ocrProvider"
-                              value="paddle"
-                              checked={settings.ocrProvider === 'paddle'}
-                              onChange={handleSettingChange}
-                              className="text-brand-600 focus:ring-brand-500"
-                          />
-                          <div>
-                              <span className="font-medium text-slate-900 block">PaddleOCR (Local)</span>
-                              <span className="text-xs text-slate-500">Use built-in PaddleOCR engine. Fast and accurate.</span>
                           </div>
                       </label>
                   </div>

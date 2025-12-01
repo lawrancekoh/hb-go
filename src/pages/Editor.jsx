@@ -67,104 +67,10 @@ function Editor() {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleImageUpload = async (e) => {
-      const file = e.target.files[0];
-      if (!file) return;
-
-      setIsProcessing(true);
-      setOcrStatus('Initializing...');
-
-      // Store file object for AI
-      setFileObject(file);
-
-      try {
-          let fileToProcess = file;
-          let previewData = null;
-
-          if (file.type === 'application/pdf') {
-              setOcrStatus('Converting PDF...');
-              const convertedImage = await ocrService.convertPdfToImage(file);
-              previewData = convertedImage;
-              fileToProcess = convertedImage;
-          } else {
-              const reader = new FileReader();
-              const base64Promise = new Promise((resolve) => {
-                  reader.onloadend = () => resolve(reader.result);
-              });
-              reader.readAsDataURL(file);
-              previewData = await base64Promise;
-          }
-
-          setPreviewUrl(previewData);
-          setOcrStatus('Reading text...');
-
-          const settings = await storageService.getSettings();
-          const strategy = settings.ocrProvider || 'auto';
-
-          // Basic OCR for quick preview / fallback
-          const text = await ocrService.recognize(fileToProcess, (m) => {
-                  if (m.status === 'recognizing text') {
-                      setOcrStatus(`Scanning: ${(m.progress * 100).toFixed(0)}%`);
-                  } else {
-                      setOcrStatus(m.status);
-                  }
-              }, { strategy });
-
-              setOcrStatus('Parsing...');
-              const parsed = ocrService.parseText(text);
-
-              setFormData(prev => ({
-                  ...prev,
-                  date: parsed.date || prev.date,
-                  payee: parsed.merchant || prev.payee,
-                  amount: parsed.amount || prev.amount,
-                  time: parsed.time || prev.time,
-              }));
-
-              setOcrStatus('Done');
-          } catch (err) {
-              setOcrStatus('Error');
-              console.error(err);
-          } finally {
-              setIsProcessing(false);
-              // Clear status after 2 seconds if done
-              setTimeout(() => {
-                 if (!isProcessing) setOcrStatus('');
-              }, 2000);
-          }
-  };
-
-  const handleAiScan = async () => {
-      if (!fileObject || !aiConfig) return;
-
-      setIsProcessing(true);
+  const performAiScan = async (fileToScan) => {
       setOcrStatus('AI Analyzing...');
-
       try {
-          // If we have a PDF that was converted, we need to pass the converted blob/file not the original PDF
-          // But fileObject is the original file.
-          // However, for AI, we convert image to base64 inside scanReceiptWithAI.
-          // If it's a PDF, llmService doesn't handle PDF conversion.
-          // We should use the same logic as OCR: if PDF, convert first.
-
-          let imageToScan = fileObject;
-          if (fileObject.type === 'application/pdf') {
-               // We need to re-convert or use the one from state if we stored it?
-               // We didn't store the converted file in state, only previewUrl (data uri).
-               // We can convert data URI back to blob or just use data URI logic in llmService?
-               // llmService expects File/Blob and does FileReader.
-               // Let's rely on previewUrl if it exists and is an image data URI.
-               if (previewUrl && previewUrl.startsWith('data:image')) {
-                   const res = await fetch(previewUrl);
-                   const blob = await res.blob();
-                   imageToScan = new File([blob], "converted.png", { type: "image/png" });
-               } else {
-                    // Fallback re-convert
-                    imageToScan = await ocrService.convertPdfToImage(fileObject);
-               }
-          }
-
-          const result = await llmService.scanReceiptWithAI(imageToScan, aiConfig);
+           const result = await llmService.scanReceiptWithAI(fileToScan, aiConfig);
 
           // Fuzzy match category
           let bestCategory = '';
@@ -192,14 +98,92 @@ function Editor() {
           }));
 
           setOcrStatus('AI Success');
-
       } catch (err) {
-          console.error(err);
+          console.error("AI Scan Error:", err);
           setOcrStatus('AI Error');
           alert(`AI Scan Failed: ${err.message}`);
+          throw err;
+      }
+  };
+
+  const handleImageUpload = async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      setIsProcessing(true);
+      setOcrStatus('Initializing...');
+
+      // Store file object for AI
+      setFileObject(file);
+
+      try {
+          let fileToProcess = file;
+          let previewData = null;
+
+          if (file.type === 'application/pdf') {
+              setOcrStatus('Converting PDF...');
+              const convertedImage = await ocrService.convertPdfToImage(file);
+              // convertedImage is a data URL string
+              previewData = convertedImage;
+
+              // Convert base64 data URL to Blob for OCR/AI processing
+              const res = await fetch(convertedImage);
+              const blob = await res.blob();
+              fileToProcess = new File([blob], "converted.png", { type: "image/png" });
+
+          } else {
+              const reader = new FileReader();
+              const base64Promise = new Promise((resolve) => {
+                  reader.onloadend = () => resolve(reader.result);
+              });
+              reader.readAsDataURL(file);
+              previewData = await base64Promise;
+          }
+
+          setPreviewUrl(previewData);
+
+          // Check if AI should be used
+          if (aiConfig && aiConfig.apiKey) {
+              await performAiScan(fileToProcess);
+          } else {
+              setOcrStatus('Reading text...');
+
+              const settings = await storageService.getSettings();
+              const strategy = settings.ocrProvider || 'auto';
+
+              // Basic OCR for quick preview / fallback
+              const text = await ocrService.recognize(fileToProcess, (m) => {
+                      if (m.status === 'recognizing text') {
+                          setOcrStatus(`Scanning: ${(m.progress * 100).toFixed(0)}%`);
+                      } else {
+                          setOcrStatus(m.status);
+                      }
+                  }, { strategy });
+
+              setOcrStatus('Parsing...');
+              const parsed = ocrService.parseText(text);
+
+              setFormData(prev => ({
+                  ...prev,
+                  date: parsed.date || prev.date,
+                  payee: parsed.merchant || prev.payee,
+                  amount: parsed.amount || prev.amount,
+                  time: parsed.time || prev.time,
+              }));
+
+              setOcrStatus('Done');
+          }
+
+      } catch (err) {
+          setOcrStatus('Error');
+          console.error(err);
       } finally {
           setIsProcessing(false);
-          setTimeout(() => setOcrStatus(''), 2000);
+          // Clear status after 2 seconds if done
+          setTimeout(() => {
+             // Only clear if we are not processing another request
+             setOcrStatus((prev) => prev === 'Done' || prev === 'AI Success' ? '' : prev);
+          }, 2000);
       }
   };
 
@@ -287,16 +271,6 @@ function Editor() {
                   )}
               </div>
 
-               {/* AI Scan Button */}
-               {aiConfig && previewUrl && !isProcessing && (
-                   <Button
-                        onClick={handleAiScan}
-                        className="w-full gap-2 bg-indigo-600 hover:bg-indigo-700 text-white shadow-md transition-all hover:scale-[1.02]"
-                   >
-                       <Sparkles className="h-4 w-4" />
-                       Scan with AI
-                   </Button>
-               )}
 
                {/* Mobile: Show OCR status below image if not processing but recently finished */}
                {!isProcessing && ocrStatus && (

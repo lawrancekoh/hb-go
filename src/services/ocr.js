@@ -1,4 +1,4 @@
-import * as paddleOcr from '@paddle-js-models/ocr';
+import Tesseract from 'tesseract.js';
 import * as pdfjsLib from 'pdfjs-dist';
 import { parseText } from './ocrUtils.js';
 
@@ -6,15 +6,6 @@ import { parseText } from './ocrUtils.js';
 const workerUrl = new URL('pdfjs-dist/build/pdf.worker.min.mjs', import.meta.url).toString();
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = workerUrl;
-
-let paddleInitialized = false;
-
-const initPaddle = async () => {
-    if (!paddleInitialized) {
-        await paddleOcr.init();
-        paddleInitialized = true;
-    }
-};
 
 export const ocrService = {
   convertPdfToImage: async (pdfFile) => {
@@ -118,41 +109,23 @@ export const ocrService = {
         }
     }
 
-    // Fallback to PaddleOCR
-    if (onProgress) onProgress({ status: 'Starting PaddleOCR...', progress: 0.3 });
+    // Fallback to Tesseract.js
+    if (onProgress) onProgress({ status: 'Starting Tesseract OCR...', progress: 0.3 });
 
     try {
-        await initPaddle();
+        const result = await Tesseract.recognize(
+            imageToScan,
+            'eng',
+            {
+                logger: m => {
+                    if (onProgress && m.status === 'recognizing text') {
+                         onProgress({ status: 'recognizing text', progress: m.progress });
+                    }
+                }
+            }
+        );
 
-        let imgElement;
-        // PaddleOCR expects an HTMLImageElement or similar.
-        // We need to ensure we have a valid image source.
-        if (imageToScan instanceof File || imageToScan instanceof Blob) {
-             const url = URL.createObjectURL(imageToScan);
-             imgElement = document.createElement('img');
-             imgElement.src = url;
-             await new Promise((resolve) => { imgElement.onload = resolve; });
-        } else if (typeof imageToScan === 'string' && imageToScan.startsWith('data:')) {
-             imgElement = document.createElement('img');
-             imgElement.src = imageToScan;
-             await new Promise((resolve) => { imgElement.onload = resolve; });
-        } else {
-             // Assuming it's already an image element if it reached here from elsewhere,
-             // but current usage mainly passes File/Blob/DataURL.
-             imgElement = imageToScan;
-        }
-
-        const res = await paddleOcr.recognize(imgElement);
-
-        // Clean up object URL if we created one
-        if (imageToScan instanceof File || imageToScan instanceof Blob) {
-            URL.revokeObjectURL(imgElement.src);
-        }
-
-        // PaddleOCR result structure: { text: string, ... }
-        // Based on npm usage: console.log(res.text)
-        return res.text ? res.text.join('\n') : '';
-
+        return result.data.text;
     } catch (error) {
         console.error("OCR Error:", error);
         throw error;
