@@ -43,10 +43,7 @@ function Editor() {
         // Load AI Config
         const storedAiConfig = localStorage.getItem('hb_ai_config');
         if (storedAiConfig) {
-            try {
-                const parsed = JSON.parse(storedAiConfig);
-                if (parsed.apiKey) setAiConfig(parsed);
-            } catch (e) {}
+            setAiConfig(JSON.parse(storedAiConfig));
         }
 
         if (id && id !== 'new') {
@@ -144,26 +141,43 @@ function Editor() {
       setOcrStatus('AI Analyzing...');
 
       try {
+          // If we have a PDF that was converted, we need to pass the converted blob/file not the original PDF
+          // But fileObject is the original file.
+          // However, for AI, we convert image to base64 inside scanReceiptWithAI.
+          // If it's a PDF, llmService doesn't handle PDF conversion.
+          // We should use the same logic as OCR: if PDF, convert first.
+
           let imageToScan = fileObject;
           if (fileObject.type === 'application/pdf') {
+               // We need to re-convert or use the one from state if we stored it?
+               // We didn't store the converted file in state, only previewUrl (data uri).
+               // We can convert data URI back to blob or just use data URI logic in llmService?
+               // llmService expects File/Blob and does FileReader.
+               // Let's rely on previewUrl if it exists and is an image data URI.
                if (previewUrl && previewUrl.startsWith('data:image')) {
                    const res = await fetch(previewUrl);
                    const blob = await res.blob();
                    imageToScan = new File([blob], "converted.png", { type: "image/png" });
                } else {
+                    // Fallback re-convert
                     imageToScan = await ocrService.convertPdfToImage(fileObject);
                }
           }
 
           const result = await llmService.scanReceiptWithAI(imageToScan, aiConfig);
 
+          // Fuzzy match category
           let bestCategory = '';
           if (result.category_guess && categories.length > 0) {
               const guess = result.category_guess.toLowerCase();
+              // 1. Exact match (insensitive)
               let match = categories.find(c => c.toLowerCase() === guess);
+
+              // 2. Contains match
               if (!match) {
                   match = categories.find(c => c.toLowerCase().includes(guess) || guess.includes(c.toLowerCase()));
               }
+
               if (match) bestCategory = match;
           }
 
@@ -172,7 +186,7 @@ function Editor() {
               date: result.date || prev.date,
               time: result.time || prev.time,
               payee: result.merchant || prev.payee,
-              amount: result.amount ? (parseFloat(result.amount) * -1).toString() : prev.amount,
+              amount: result.amount ? (parseFloat(result.amount) * -1).toString() : prev.amount, // Expense is negative
               category: bestCategory || prev.category,
               memo: `[AI] ${prev.memo}`.trim()
           }));
