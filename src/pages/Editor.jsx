@@ -1,5 +1,5 @@
 import { useParams, useNavigate } from 'react-router-dom';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { storageService } from '../services/storage';
 import { ocrService } from '../services/ocr';
 import { llmService } from '../services/llm';
@@ -7,7 +7,6 @@ import { ArrowLeft, Save, Loader2, Camera, Upload, X, Sparkles } from 'lucide-re
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { Label } from '../components/ui/Label';
-import { Card } from '../components/ui/Card';
 import { cn } from '../lib/utils';
 
 function Editor() {
@@ -67,6 +66,65 @@ function Editor() {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
+  const performLocalOcr = async (fileToProcess) => {
+      const settings = await storageService.getSettings();
+      const strategy = settings.ocrProvider || 'auto';
+
+      const text = await ocrService.recognize(fileToProcess, (m) => {
+          if (m.status === 'recognizing text') {
+              setOcrStatus(`Scanning: ${(m.progress * 100).toFixed(0)}%`);
+          } else {
+              setOcrStatus(m.status);
+          }
+      }, { strategy });
+
+      setOcrStatus('Parsing...');
+      const parsed = ocrService.parseText(text);
+
+      setFormData(prev => ({
+          ...prev,
+          date: parsed.date || prev.date,
+          payee: parsed.merchant || prev.payee,
+          amount: parsed.amount || prev.amount,
+          time: parsed.time || prev.time,
+      }));
+
+      setOcrStatus('Done');
+  };
+
+  const performAiScan = async (imageToScan, config) => {
+      try {
+           const result = await llmService.scanReceiptWithAI(imageToScan, config);
+
+           let bestCategory = '';
+           if (result.category_guess && categories.length > 0) {
+               const guess = result.category_guess.toLowerCase();
+               let match = categories.find(c => c.toLowerCase() === guess);
+               if (!match) {
+                   match = categories.find(c => c.toLowerCase().includes(guess) || guess.includes(c.toLowerCase()));
+               }
+               if (match) bestCategory = match;
+           }
+
+           setFormData(prev => ({
+               ...prev,
+               date: result.date || prev.date,
+               time: result.time || prev.time,
+               payee: result.merchant || prev.payee,
+               amount: result.amount ? (parseFloat(result.amount) * -1).toString() : prev.amount,
+               category: bestCategory || prev.category,
+               memo: `[AI] ${prev.memo}`.trim()
+           }));
+
+           setOcrStatus('AI Success');
+      } catch (err) {
+           console.error("AI Scan Error:", err);
+           setOcrStatus('AI Failed. Local OCR...');
+           // Fallback to local OCR if AI fails
+           await performLocalOcr(imageToScan);
+      }
+  };
+
   const handleImageUpload = async (e) => {
       const file = e.target.files[0];
       if (!file) return;
@@ -79,6 +137,7 @@ function Editor() {
 
       try {
           let fileToProcess = file;
+          // eslint-disable-next-line no-unused-vars
           let previewData = null;
 
           if (file.type === 'application/pdf') {

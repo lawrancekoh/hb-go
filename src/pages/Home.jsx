@@ -5,7 +5,6 @@ import { csvService } from '../services/csv';
 import { Camera, Trash2, Download, Tag, Edit3, Plus, Sparkles } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 import { Card, CardContent } from '../components/ui/Card';
-import { cn } from '../lib/utils';
 
 function Home() {
   const [transactions, setTransactions] = useState([]);
@@ -13,6 +12,25 @@ function Home() {
   const navigate = useNavigate();
 
   useEffect(() => {
+    const loadTransactions = async () => {
+      const txs = await storageService.getTransactions();
+      // Sort by date desc
+      txs.sort((a, b) => new Date(b.date) - new Date(a.date));
+      setTransactions(txs);
+    };
+
+    const checkAiConfig = () => {
+        const config = localStorage.getItem('hb_ai_config');
+        if (config) {
+            try {
+              const parsed = JSON.parse(config);
+              if (parsed.apiKey) setIsAiEnabled(true);
+            } catch {
+               // ignore error
+            }
+        }
+    };
+
     loadTransactions();
     checkAiConfig();
   }, []);
@@ -39,8 +57,10 @@ function Home() {
     e.stopPropagation(); // Stop event bubbling to Card click
     if (confirm('Delete this transaction?')) {
       await storageService.deleteTransaction(id);
-      loadTransactions();
-    }
+      const txs = await storageService.getTransactions();
+      txs.sort((a, b) => new Date(b.date) - new Date(a.date));
+      setTransactions(txs);
+    };
   };
 
   const handleExport = async () => {
@@ -54,7 +74,7 @@ function Home() {
 
     if (confirm('Export successful! Clear exported transactions?')) {
         await storageService.clearTransactions();
-        loadTransactions();
+        setTransactions([]);
     }
   };
 
