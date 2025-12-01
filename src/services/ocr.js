@@ -48,25 +48,42 @@ export const ocrService = {
     // Initialize TextDetector
     // eslint-disable-next-line no-undef
     const textDetector = new TextDetector();
-    let imageElement = imageSource;
+    let imageElement;
+    let objectUrlToRevoke = null;
 
-    // TextDetector expects an ImageBitmap, HTMLImageElement, HTMLVideoElement, or HTMLCanvasElement
-    if (typeof imageSource === 'string' && imageSource.startsWith('data:')) {
-        // Convert base64 to ImageBitmap
-        const response = await fetch(imageSource);
-        const blob = await response.blob();
-        imageElement = await createImageBitmap(blob);
-    } else if (imageSource instanceof File || imageSource instanceof Blob) {
-        imageElement = await createImageBitmap(imageSource);
-    }
-
+    // Use HTMLImageElement to handle EXIF orientation and diverse input formats
     try {
+        if (imageSource instanceof File || imageSource instanceof Blob) {
+            const url = URL.createObjectURL(imageSource);
+            objectUrlToRevoke = url;
+            imageElement = document.createElement('img');
+            imageElement.src = url;
+            await new Promise((resolve, reject) => {
+                imageElement.onload = resolve;
+                imageElement.onerror = reject;
+            });
+        } else if (typeof imageSource === 'string' && imageSource.startsWith('data:')) {
+            imageElement = document.createElement('img');
+            imageElement.src = imageSource;
+            await new Promise((resolve, reject) => {
+                imageElement.onload = resolve;
+                imageElement.onerror = reject;
+            });
+        } else {
+             // If it is already an image element or bitmap
+             imageElement = imageSource;
+        }
+
         const detectedText = await textDetector.detect(imageElement);
         // detectedText is an array of { rawValue, boundingBox, cornerPoints }
         return detectedText.map(t => t.rawValue).join('\n');
     } catch (e) {
         console.error('System OCR failed:', e);
         throw e;
+    } finally {
+        if (objectUrlToRevoke) {
+            URL.revokeObjectURL(objectUrlToRevoke);
+        }
     }
   },
 
@@ -135,13 +152,6 @@ export const ocrService = {
         // PaddleOCR result structure: { text: string, ... }
         // Based on npm usage: console.log(res.text)
         return res.text ? res.text.join('\n') : '';
-        // Wait, checking usage again. Usage says "console.log(res.text)".
-        // If it returns an array of lines, join them. If it returns a string, verify.
-        // The snippet says: "ocr_recognition model can recognize the characters ... res.text"
-        // I should double check if res.text is an array or string.
-        // Usually OCR returns blocks.
-        // Let's assume it might be array if it detects multiple lines.
-        // If it's a string, join won't hurt if we check type, or just return it.
 
     } catch (error) {
         console.error("OCR Error:", error);
