@@ -1,20 +1,24 @@
 import { useState, useEffect } from 'react';
 import { storageService } from '../services/storage';
 import { xhbParser } from '../services/xhbParser';
-import { Upload, Trash2, Database, Tag, Save } from 'lucide-react';
+import { Upload, Trash2, Database, Tag, Save, Scan } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { Label } from '../components/ui/Label';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '../components/ui/Card';
 
 function Settings() {
-  const [settings, setSettings] = useState({ defaultTag: '' });
+  const [settings, setSettings] = useState({ defaultTag: '', ocrProvider: 'auto' });
   const [cache, setCache] = useState({ categories: [], payees: [] });
   const [importStatus, setImportStatus] = useState('');
 
   useEffect(() => {
     const loadSettings = async () => {
-        setSettings(await storageService.getSettings());
+        const storedSettings = await storageService.getSettings();
+        setSettings({
+            ...storedSettings,
+            ocrProvider: storedSettings.ocrProvider || 'auto'
+        });
         setCache(await storageService.getCache());
     };
     loadSettings();
@@ -98,6 +102,68 @@ function Settings() {
                       <p className="text-xs text-slate-500 uppercase font-medium">Payees</p>
                   </div>
               </div>
+          </CardContent>
+      </Card>
+
+      {/* Scanner Settings */}
+      <Card>
+          <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                  <Scan className="h-5 w-5 text-brand-600" />
+                  Scanner Settings
+              </CardTitle>
+              <CardDescription>
+                  Choose how receipts are processed.
+              </CardDescription>
+          </CardHeader>
+          <CardContent>
+               <div className="space-y-3">
+                  <Label>OCR Engine</Label>
+                  <div className="flex flex-col gap-2">
+                      <label className="flex items-center gap-3 p-3 border rounded-lg cursor-pointer hover:bg-slate-50">
+                          <input
+                              type="radio"
+                              name="ocrProvider"
+                              value="auto"
+                              checked={settings.ocrProvider === 'auto'}
+                              onChange={handleSettingChange}
+                              className="text-brand-600 focus:ring-brand-500"
+                          />
+                          <div>
+                              <span className="font-medium text-slate-900 block">Auto (Recommended)</span>
+                              <span className="text-xs text-slate-500">Use System OCR if available, otherwise Tesseract.</span>
+                          </div>
+                      </label>
+                      <label className="flex items-center gap-3 p-3 border rounded-lg cursor-pointer hover:bg-slate-50">
+                          <input
+                              type="radio"
+                              name="ocrProvider"
+                              value="system"
+                              checked={settings.ocrProvider === 'system'}
+                              onChange={handleSettingChange}
+                              className="text-brand-600 focus:ring-brand-500"
+                          />
+                          <div>
+                              <span className="font-medium text-slate-900 block">System Only</span>
+                              <span className="text-xs text-slate-500">Use device's native text detection. Fast but may vary by device.</span>
+                          </div>
+                      </label>
+                      <label className="flex items-center gap-3 p-3 border rounded-lg cursor-pointer hover:bg-slate-50">
+                          <input
+                              type="radio"
+                              name="ocrProvider"
+                              value="tesseract"
+                              checked={settings.ocrProvider === 'tesseract'}
+                              onChange={handleSettingChange}
+                              className="text-brand-600 focus:ring-brand-500"
+                          />
+                          <div>
+                              <span className="font-medium text-slate-900 block">Tesseract (Local)</span>
+                              <span className="text-xs text-slate-500">Use built-in Tesseract.js engine. Reliable but slower.</span>
+                          </div>
+                      </label>
+                  </div>
+               </div>
           </CardContent>
       </Card>
 

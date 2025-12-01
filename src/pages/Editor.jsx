@@ -86,13 +86,16 @@ function Editor() {
           setPreviewUrl(previewData);
           setOcrStatus('Reading text...');
 
+          const settings = await storageService.getSettings();
+          const strategy = settings.ocrProvider || 'auto';
+
           const text = await ocrService.recognize(fileToProcess, (m) => {
                   if (m.status === 'recognizing text') {
                       setOcrStatus(`Scanning: ${(m.progress * 100).toFixed(0)}%`);
                   } else {
                       setOcrStatus(m.status);
                   }
-              });
+              }, { strategy });
 
               setOcrStatus('Parsing...');
               const parsed = ocrService.parseText(text);
