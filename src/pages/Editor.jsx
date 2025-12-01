@@ -132,6 +132,17 @@ function Editor() {
                  if (!isProcessing) setOcrStatus('');
               }, 2000);
           }
+
+          await performAiScan(imageToScan, aiConfig);
+
+      } catch (err) {
+          console.error(err);
+          setOcrStatus('AI Error');
+          alert(`AI Scan Failed: ${err.message}`);
+      } finally {
+          setIsProcessing(false);
+          setTimeout(() => setOcrStatus(''), 2000);
+      }
   };
 
   const handleAiScan = async () => {
@@ -301,7 +312,7 @@ function Editor() {
                {/* Mobile: Show OCR status below image if not processing but recently finished */}
                {!isProcessing && ocrStatus && (
                   <div className="text-xs text-center text-emerald-600 font-medium bg-emerald-50 py-1 rounded">
-                      OCR: {ocrStatus}
+                      {ocrStatus === 'Done' || ocrStatus === 'AI Success' ? ocrStatus : `Last Status: ${ocrStatus}`}
                   </div>
                )}
           </div>
