@@ -69,6 +69,14 @@ export const parseText = (text) => {
          if (maxAmt > 0) amount = maxAmt.toFixed(2);
     }
 
+    // Ensure amount is negative for expenses
+    if (amount) {
+        const val = parseFloat(amount);
+        if (val > 0) {
+            amount = (val * -1).toFixed(2);
+        }
+    }
+
     return {
         date,
         time,
