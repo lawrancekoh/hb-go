@@ -2,7 +2,8 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useState, useEffect, useRef } from 'react';
 import { storageService } from '../services/storage';
 import { ocrService } from '../services/ocr';
-import { ArrowLeft, Save, Loader2, Camera, Upload, X } from 'lucide-react';
+import { llmService } from '../services/llm';
+import { ArrowLeft, Save, Loader2, Camera, Upload, X, Sparkles } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { Label } from '../components/ui/Label';
@@ -29,6 +30,8 @@ function Editor() {
   const [ocrStatus, setOcrStatus] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
   const [previewUrl, setPreviewUrl] = useState(null);
+  const [fileObject, setFileObject] = useState(null); // Keep reference to file for AI
+  const [aiConfig, setAiConfig] = useState(null);
 
   // Load Data
   useEffect(() => {
@@ -36,6 +39,12 @@ function Editor() {
         const cache = await storageService.getCache();
         if (cache.categories) setCategories(cache.categories);
         if (cache.payees) setPayees(cache.payees);
+
+        // Load AI Config
+        const storedAiConfig = localStorage.getItem('hb_ai_config');
+        if (storedAiConfig) {
+            setAiConfig(JSON.parse(storedAiConfig));
+        }
 
         if (id && id !== 'new') {
             const transaction = await storageService.getTransaction(id);
@@ -64,6 +73,9 @@ function Editor() {
 
       setIsProcessing(true);
       setOcrStatus('Initializing...');
+
+      // Store file object for AI
+      setFileObject(file);
 
       try {
           let fileToProcess = file;
@@ -121,9 +133,79 @@ function Editor() {
           }
   };
 
+  const handleAiScan = async () => {
+      if (!fileObject || !aiConfig) return;
+
+      setIsProcessing(true);
+      setOcrStatus('AI Analyzing...');
+
+      try {
+          // If we have a PDF that was converted, we need to pass the converted blob/file not the original PDF
+          // But fileObject is the original file.
+          // However, for AI, we convert image to base64 inside scanReceiptWithAI.
+          // If it's a PDF, llmService doesn't handle PDF conversion.
+          // We should use the same logic as OCR: if PDF, convert first.
+
+          let imageToScan = fileObject;
+          if (fileObject.type === 'application/pdf') {
+               // We need to re-convert or use the one from state if we stored it?
+               // We didn't store the converted file in state, only previewUrl (data uri).
+               // We can convert data URI back to blob or just use data URI logic in llmService?
+               // llmService expects File/Blob and does FileReader.
+               // Let's rely on previewUrl if it exists and is an image data URI.
+               if (previewUrl && previewUrl.startsWith('data:image')) {
+                   const res = await fetch(previewUrl);
+                   const blob = await res.blob();
+                   imageToScan = new File([blob], "converted.png", { type: "image/png" });
+               } else {
+                    // Fallback re-convert
+                    imageToScan = await ocrService.convertPdfToImage(fileObject);
+               }
+          }
+
+          const result = await llmService.scanReceiptWithAI(imageToScan, aiConfig);
+
+          // Fuzzy match category
+          let bestCategory = '';
+          if (result.category_guess && categories.length > 0) {
+              const guess = result.category_guess.toLowerCase();
+              // 1. Exact match (insensitive)
+              let match = categories.find(c => c.toLowerCase() === guess);
+
+              // 2. Contains match
+              if (!match) {
+                  match = categories.find(c => c.toLowerCase().includes(guess) || guess.includes(c.toLowerCase()));
+              }
+
+              if (match) bestCategory = match;
+          }
+
+          setFormData(prev => ({
+              ...prev,
+              date: result.date || prev.date,
+              time: result.time || prev.time,
+              payee: result.merchant || prev.payee,
+              amount: result.amount ? (parseFloat(result.amount) * -1).toString() : prev.amount, // Expense is negative
+              category: bestCategory || prev.category,
+              memo: `[AI] ${prev.memo}`.trim()
+          }));
+
+          setOcrStatus('AI Success');
+
+      } catch (err) {
+          console.error(err);
+          setOcrStatus('AI Error');
+          alert(`AI Scan Failed: ${err.message}`);
+      } finally {
+          setIsProcessing(false);
+          setTimeout(() => setOcrStatus(''), 2000);
+      }
+  };
+
   const handleClearImage = (e) => {
       e.preventDefault();
       setPreviewUrl(null);
+      setFileObject(null);
   };
 
   const handleSubmit = async (e) => {
@@ -189,6 +271,18 @@ function Editor() {
                       </div>
                   )}
               </div>
+
+               {/* AI Scan Button */}
+               {aiConfig && previewUrl && !isProcessing && (
+                   <Button
+                        onClick={handleAiScan}
+                        className="w-full gap-2 bg-indigo-600 hover:bg-indigo-700 text-white shadow-md transition-all hover:scale-[1.02]"
+                   >
+                       <Sparkles className="h-4 w-4" />
+                       Scan with AI
+                   </Button>
+               )}
+
                {/* Mobile: Show OCR status below image if not processing but recently finished */}
                {!isProcessing && ocrStatus && (
                   <div className="text-xs text-center text-emerald-600 font-medium bg-emerald-50 py-1 rounded">
