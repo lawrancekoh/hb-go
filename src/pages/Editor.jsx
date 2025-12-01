@@ -1,12 +1,12 @@
 import { useParams, useNavigate } from 'react-router-dom';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { storageService } from '../services/storage';
 import { ocrService } from '../services/ocr';
-import { ArrowLeft, Save, Loader2, Camera, Upload, X } from 'lucide-react';
+import { llmService } from '../services/llm';
+import { ArrowLeft, Save, Loader2, Camera, X, Sparkles } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { Label } from '../components/ui/Label';
-import { Card } from '../components/ui/Card';
 import { cn } from '../lib/utils';
 
 function Editor() {
@@ -29,6 +29,8 @@ function Editor() {
   const [ocrStatus, setOcrStatus] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
   const [previewUrl, setPreviewUrl] = useState(null);
+  const [fileObject, setFileObject] = useState(null); // Keep reference to file for AI
+  const [aiConfig, setAiConfig] = useState(null);
 
   // Load Data
   useEffect(() => {
@@ -36,6 +38,17 @@ function Editor() {
         const cache = await storageService.getCache();
         if (cache.categories) setCategories(cache.categories);
         if (cache.payees) setPayees(cache.payees);
+
+        // Load AI Config
+        const storedAiConfig = localStorage.getItem('hb_ai_config');
+        if (storedAiConfig) {
+            try {
+                const parsed = JSON.parse(storedAiConfig);
+                if (parsed.apiKey) setAiConfig(parsed);
+            } catch {
+                // ignore
+            }
+        }
 
         if (id && id !== 'new') {
             const transaction = await storageService.getTransaction(id);
@@ -58,6 +71,65 @@ function Editor() {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
+  const performLocalOcr = async (fileToProcess) => {
+      const settings = await storageService.getSettings();
+      const strategy = settings.ocrProvider || 'auto';
+
+      const text = await ocrService.recognize(fileToProcess, (m) => {
+          if (m.status === 'recognizing text') {
+              setOcrStatus(`Scanning: ${(m.progress * 100).toFixed(0)}%`);
+          } else {
+              setOcrStatus(m.status);
+          }
+      }, { strategy });
+
+      setOcrStatus('Parsing...');
+      const parsed = ocrService.parseText(text);
+
+      setFormData(prev => ({
+          ...prev,
+          date: parsed.date || prev.date,
+          payee: parsed.merchant || prev.payee,
+          amount: parsed.amount || prev.amount,
+          time: parsed.time || prev.time,
+      }));
+
+      setOcrStatus('Done');
+  };
+
+  const performAiScan = async (imageToScan, config) => {
+      try {
+           const result = await llmService.scanReceiptWithAI(imageToScan, config);
+
+           let bestCategory = '';
+           if (result.category_guess && categories.length > 0) {
+               const guess = result.category_guess.toLowerCase();
+               let match = categories.find(c => c.toLowerCase() === guess);
+               if (!match) {
+                   match = categories.find(c => c.toLowerCase().includes(guess) || guess.includes(c.toLowerCase()));
+               }
+               if (match) bestCategory = match;
+           }
+
+           setFormData(prev => ({
+               ...prev,
+               date: result.date || prev.date,
+               time: result.time || prev.time,
+               payee: result.merchant || prev.payee,
+               amount: result.amount ? (parseFloat(result.amount) * -1).toString() : prev.amount,
+               category: bestCategory || prev.category,
+               memo: `[AI] ${prev.memo}`.trim()
+           }));
+
+           setOcrStatus('AI Success');
+      } catch (err) {
+           console.error("AI Scan Error:", err);
+           setOcrStatus('AI Failed. Local OCR...');
+           // Fallback to local OCR if AI fails
+           await performLocalOcr(imageToScan);
+      }
+  };
+
   const handleImageUpload = async (e) => {
       const file = e.target.files[0];
       if (!file) return;
@@ -65,8 +137,12 @@ function Editor() {
       setIsProcessing(true);
       setOcrStatus('Initializing...');
 
+      // Store file object for AI
+      setFileObject(file);
+
       try {
           let fileToProcess = file;
+          // eslint-disable-next-line no-unused-vars
           let previewData = null;
 
           if (file.type === 'application/pdf') {
@@ -84,46 +160,65 @@ function Editor() {
           }
 
           setPreviewUrl(previewData);
-          setOcrStatus('Reading text...');
 
-          const settings = await storageService.getSettings();
-          const strategy = settings.ocrProvider || 'auto';
-
-          const text = await ocrService.recognize(fileToProcess, (m) => {
-                  if (m.status === 'recognizing text') {
-                      setOcrStatus(`Scanning: ${(m.progress * 100).toFixed(0)}%`);
-                  } else {
-                      setOcrStatus(m.status);
-                  }
-              }, { strategy });
-
-              setOcrStatus('Parsing...');
-              const parsed = ocrService.parseText(text);
-
-              setFormData(prev => ({
-                  ...prev,
-                  date: parsed.date || prev.date,
-                  payee: parsed.merchant || prev.payee,
-                  amount: parsed.amount || prev.amount,
-                  time: parsed.time || prev.time,
-              }));
-
-              setOcrStatus('Done');
-          } catch (err) {
-              setOcrStatus('Error');
-              console.error(err);
-          } finally {
-              setIsProcessing(false);
-              // Clear status after 2 seconds if done
-              setTimeout(() => {
-                 if (!isProcessing) setOcrStatus('');
-              }, 2000);
+          // Priority: Check if AI is configured and should run immediately
+          if (aiConfig && aiConfig.apiKey) {
+              setOcrStatus('AI Analyzing...');
+              await performAiScan(fileToProcess, aiConfig);
+          } else {
+              // Fallback to Local OCR
+              setOcrStatus('Reading text...');
+              await performLocalOcr(fileToProcess);
           }
+
+      } catch (err) {
+          setOcrStatus('Error');
+          console.error(err);
+      } finally {
+          setIsProcessing(false);
+          // Clear status after 2 seconds if done
+          setTimeout(() => {
+             // We can check ref here or just rely on react batching not to matter for unmount if navigated away
+             setOcrStatus('');
+          }, 2000);
+      }
+  };
+
+  // Helper for manual trigger (if needed)
+  const handleManualAiScan = async () => {
+      if (!fileObject || !aiConfig) return;
+
+      setIsProcessing(true);
+      setOcrStatus('AI Analyzing...');
+
+      try {
+          let imageToScan = fileObject;
+          if (fileObject.type === 'application/pdf') {
+               if (previewUrl && previewUrl.startsWith('data:image')) {
+                   const res = await fetch(previewUrl);
+                   const blob = await res.blob();
+                   imageToScan = new File([blob], "converted.png", { type: "image/png" });
+               } else {
+                    imageToScan = await ocrService.convertPdfToImage(fileObject);
+               }
+          }
+
+          await performAiScan(imageToScan, aiConfig);
+
+      } catch (err) {
+          console.error(err);
+          setOcrStatus('AI Error');
+          alert(`AI Scan Failed: ${err.message}`);
+      } finally {
+          setIsProcessing(false);
+          setTimeout(() => setOcrStatus(''), 2000);
+      }
   };
 
   const handleClearImage = (e) => {
       e.preventDefault();
       setPreviewUrl(null);
+      setFileObject(null);
   };
 
   const handleSubmit = async (e) => {
@@ -162,11 +257,25 @@ function Editor() {
                         </Button>
                       </>
                   ) : (
-                      <div className="text-center p-6">
-                           <div className="bg-white p-4 rounded-full shadow-sm inline-flex mb-4">
+                      <div className="text-center p-6 relative">
+                           {/* AI Badge */}
+                           {aiConfig && (
+                               <div className="absolute -top-2 left-1/2 -translate-x-1/2 bg-indigo-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm flex items-center gap-1">
+                                   <Sparkles className="h-3 w-3" /> AI READY
+                               </div>
+                           )}
+
+                           <div className="bg-white p-4 rounded-full shadow-sm inline-flex mb-4 relative">
                                 <Camera className="h-8 w-8 text-brand-600" />
+                                {aiConfig && (
+                                    <div className="absolute -top-1 -right-1 bg-indigo-600 text-white rounded-full p-1 border-2 border-white">
+                                        <Sparkles className="h-3 w-3" />
+                                    </div>
+                                )}
                            </div>
-                           <p className="font-medium text-slate-900">Tap to Scan Receipt</p>
+                           <p className="font-medium text-slate-900">
+                               {aiConfig ? "Tap to Scan with AI" : "Tap to Scan Receipt"}
+                           </p>
                            <p className="text-xs text-slate-500 mt-1">Supports Image & PDF</p>
                       </div>
                   )}
@@ -189,10 +298,22 @@ function Editor() {
                       </div>
                   )}
               </div>
+
+               {/* AI Scan Button (Manual Trigger if retry needed) */}
+               {aiConfig && previewUrl && !isProcessing && (
+                   <Button
+                        onClick={handleManualAiScan}
+                        className="w-full gap-2 bg-indigo-600 hover:bg-indigo-700 text-white shadow-md transition-all hover:scale-[1.02]"
+                   >
+                       <Sparkles className="h-4 w-4" />
+                       Re-Scan with AI
+                   </Button>
+               )}
+
                {/* Mobile: Show OCR status below image if not processing but recently finished */}
                {!isProcessing && ocrStatus && (
                   <div className="text-xs text-center text-emerald-600 font-medium bg-emerald-50 py-1 rounded">
-                      OCR: {ocrStatus}
+                      {ocrStatus === 'Done' || ocrStatus === 'AI Success' ? ocrStatus : `Last Status: ${ocrStatus}`}
                   </div>
                )}
           </div>

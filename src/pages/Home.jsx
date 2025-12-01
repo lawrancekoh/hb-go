@@ -2,33 +2,48 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { storageService } from '../services/storage';
 import { csvService } from '../services/csv';
-import { Camera, Trash2, Download, Tag, Edit3, Plus } from 'lucide-react';
+import { Camera, Trash2, Download, Tag, Plus, Sparkles } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 import { Card, CardContent } from '../components/ui/Card';
-import { cn } from '../lib/utils';
 
 function Home() {
   const [transactions, setTransactions] = useState([]);
+  const [isAiEnabled, setIsAiEnabled] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
-    loadTransactions();
-  }, []);
+    const loadTransactions = async () => {
+      const txs = await storageService.getTransactions();
+      // Sort by date desc
+      txs.sort((a, b) => new Date(b.date) - new Date(a.date));
+      setTransactions(txs);
+    };
 
-  const loadTransactions = async () => {
-    const txs = await storageService.getTransactions();
-    // Sort by date desc
-    txs.sort((a, b) => new Date(b.date) - new Date(a.date));
-    setTransactions(txs);
-  };
+    const checkAiConfig = () => {
+        const config = localStorage.getItem('hb_ai_config');
+        if (config) {
+            try {
+              const parsed = JSON.parse(config);
+              if (parsed.apiKey) setIsAiEnabled(true);
+            } catch {
+               // ignore error
+            }
+        }
+    };
+
+    loadTransactions();
+    checkAiConfig();
+  }, []);
 
   const handleDelete = async (e, id) => {
     e.preventDefault();
     e.stopPropagation(); // Stop event bubbling to Card click
     if (confirm('Delete this transaction?')) {
       await storageService.deleteTransaction(id);
-      loadTransactions();
-    }
+      const txs = await storageService.getTransactions();
+      txs.sort((a, b) => new Date(b.date) - new Date(a.date));
+      setTransactions(txs);
+    };
   };
 
   const handleExport = async () => {
@@ -42,7 +57,7 @@ function Home() {
 
     if (confirm('Export successful! Clear exported transactions?')) {
         await storageService.clearTransactions();
-        loadTransactions();
+        setTransactions([]);
     }
   };
 
@@ -60,6 +75,16 @@ function Home() {
                   <p className="text-brand-200 text-xs mt-2">{transactions.length} transactions</p>
               </div>
               <div className="flex gap-2">
+                {isAiEnabled && (
+                    <Button
+                        href="/editor/new"
+                        variant="secondary"
+                        size="sm"
+                        className="hidden md:inline-flex gap-2 bg-indigo-500/30 text-white hover:bg-indigo-500/50 border border-indigo-400/30"
+                    >
+                        <Sparkles className="h-4 w-4" /> Scan with AI
+                    </Button>
+                )}
                 <Button
                   href="/editor/new"
                   variant="secondary"
@@ -88,12 +113,17 @@ function Home() {
             to="/editor/new"
             className="block text-center py-12 px-4 border-2 border-dashed border-slate-200 rounded-lg bg-slate-50 hover:bg-slate-100 transition-colors cursor-pointer group"
           >
-            <div className="bg-white p-3 rounded-full w-fit mx-auto shadow-sm mb-4 group-hover:scale-110 transition-transform">
+            <div className="bg-white p-3 rounded-full w-fit mx-auto shadow-sm mb-4 group-hover:scale-110 transition-transform relative">
                 <Camera className="h-8 w-8 text-brand-600" />
+                {isAiEnabled && (
+                    <div className="absolute -top-1 -right-1 bg-indigo-600 text-white rounded-full p-1 border-2 border-white">
+                        <Sparkles className="h-3 w-3" />
+                    </div>
+                )}
             </div>
             <h3 className="text-lg font-medium text-slate-900">No transactions yet</h3>
             <p className="text-slate-500 text-sm mt-1 max-w-xs mx-auto">
-              Tap here or the button below to scan your first receipt.
+              {isAiEnabled ? "Tap here to start an AI receipt scan." : "Tap here or the button below to scan your first receipt."}
             </p>
           </Link>
         ) : (
