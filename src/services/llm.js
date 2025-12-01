@@ -185,7 +185,7 @@ export const llmService = {
 
     try {
         return JSON.parse(cleanJson);
-    } catch {
+    } catch (e) {
         console.error('Failed to parse AI response:', responseText);
         throw new Error('AI returned invalid JSON');
     }
