@@ -4,11 +4,17 @@ import { VitePWA } from 'vite-plugin-pwa'
 
 // https://vitejs.dev/config/
 export default defineConfig({
+  define: {
+    Module: {}
+  },
   plugins: [
     react(),
     VitePWA({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.svg', 'robots.txt', 'icons/*.png'],
+      workbox: {
+        maximumFileSizeToCacheInBytes: 5000000, // 5MB to accommodate PaddleOCR
+      },
       manifest: {
         name: 'HB Go',
         short_name: 'HB Go',
