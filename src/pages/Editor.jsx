@@ -101,6 +101,7 @@ function Editor() {
           const settings = await storageService.getSettings();
           const strategy = settings.ocrProvider || 'auto';
 
+          // Basic OCR for quick preview / fallback
           const text = await ocrService.recognize(fileToProcess, (m) => {
                   if (m.status === 'recognizing text') {
                       setOcrStatus(`Scanning: ${(m.progress * 100).toFixed(0)}%`);
@@ -244,11 +245,25 @@ function Editor() {
                         </Button>
                       </>
                   ) : (
-                      <div className="text-center p-6">
-                           <div className="bg-white p-4 rounded-full shadow-sm inline-flex mb-4">
+                      <div className="text-center p-6 relative">
+                           {/* AI Badge */}
+                           {aiConfig && (
+                               <div className="absolute -top-2 left-1/2 -translate-x-1/2 bg-indigo-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm flex items-center gap-1">
+                                   <Sparkles className="h-3 w-3" /> AI READY
+                               </div>
+                           )}
+
+                           <div className="bg-white p-4 rounded-full shadow-sm inline-flex mb-4 relative">
                                 <Camera className="h-8 w-8 text-brand-600" />
+                                {aiConfig && (
+                                    <div className="absolute -top-1 -right-1 bg-indigo-600 text-white rounded-full p-1 border-2 border-white">
+                                        <Sparkles className="h-3 w-3" />
+                                    </div>
+                                )}
                            </div>
-                           <p className="font-medium text-slate-900">Tap to Scan Receipt</p>
+                           <p className="font-medium text-slate-900">
+                               {aiConfig ? "Tap to Scan with AI" : "Tap to Scan Receipt"}
+                           </p>
                            <p className="text-xs text-slate-500 mt-1">Supports Image & PDF</p>
                       </div>
                   )}
