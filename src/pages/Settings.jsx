@@ -131,7 +131,7 @@ function Settings() {
                           />
                           <div>
                               <span className="font-medium text-slate-900 block">Auto (Recommended)</span>
-                              <span className="text-xs text-slate-500">Use System OCR if available, otherwise Tesseract.</span>
+                              <span className="text-xs text-slate-500">Use System OCR if available, otherwise PaddleOCR.</span>
                           </div>
                       </label>
                       <label className="flex items-center gap-3 p-3 border rounded-lg cursor-pointer hover:bg-slate-50">
@@ -152,14 +152,14 @@ function Settings() {
                           <input
                               type="radio"
                               name="ocrProvider"
-                              value="tesseract"
-                              checked={settings.ocrProvider === 'tesseract'}
+                              value="paddle"
+                              checked={settings.ocrProvider === 'paddle'}
                               onChange={handleSettingChange}
                               className="text-brand-600 focus:ring-brand-500"
                           />
                           <div>
-                              <span className="font-medium text-slate-900 block">Tesseract (Local)</span>
-                              <span className="text-xs text-slate-500">Use built-in Tesseract.js engine. Reliable but slower.</span>
+                              <span className="font-medium text-slate-900 block">PaddleOCR (Local)</span>
+                              <span className="text-xs text-slate-500">Use built-in PaddleOCR engine. Fast and accurate.</span>
                           </div>
                       </label>
                   </div>
