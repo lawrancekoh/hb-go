@@ -14,7 +14,7 @@ export default defineConfig({
   plugins: [
     react(),
     nodePolyfills({
-      include: ['path', 'fs', 'crypto', 'stream', 'util', 'vm'],
+      include: ['path', 'fs', 'crypto', 'stream', 'util'],
       globals: {
         Buffer: true,
         global: true,
