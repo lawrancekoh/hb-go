@@ -1,5 +1,5 @@
 import { useParams, useNavigate } from 'react-router-dom';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { storageService } from '../services/storage';
 import { ocrService } from '../services/ocr';
 import { formatMemo } from '../services/ocrUtils';
@@ -28,12 +28,13 @@ function Editor() {
     tags: ''
   });
 
+  const [transactionType, setTransactionType] = useState('expense'); // 'expense' | 'income'
+
   const [categories, setCategories] = useState([]);
   const [payees, setPayees] = useState([]);
   const [ocrStatus, setOcrStatus] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
   const [previewUrl, setPreviewUrl] = useState(null);
-  const [fileObject, setFileObject] = useState(null); // Keep reference to file for AI
   const [aiConfig, setAiConfig] = useState(null);
   const [croppingImage, setCroppingImage] = useState(null); // Base64 of image being cropped
 
@@ -53,6 +54,19 @@ function Editor() {
         if (id && id !== 'new') {
             const transaction = await storageService.getTransaction(id);
             if (transaction) {
+                // Determine type based on amount sign
+                if (transaction.amount) {
+                    const amt = parseFloat(transaction.amount);
+                    if (!isNaN(amt)) {
+                        if (amt < 0) {
+                            setTransactionType('expense');
+                            transaction.amount = Math.abs(amt).toString();
+                        } else {
+                            setTransactionType('income');
+                            // transaction.amount is already positive
+                        }
+                    }
+                }
                 setFormData(transaction);
                 if (transaction.image) setPreviewUrl(transaction.image);
             }
@@ -85,9 +99,7 @@ function Editor() {
 
           // Smart match category
           let bestCategory = '';
-          const categoryToMatch = result.category_guess || bestPayee; // Use payee for category matching if guess missing? No, mostly guess
-          // If we have a known payee, we might want to check its usual category? (Not implemented here, reliant on AI's guess or simple text match)
-
+          // We prioritize category guess
           if (result.category_guess && categories.length > 0) {
               const match = matchingService.findBestMatch(result.category_guess, categories);
               if (match) bestCategory = match;
@@ -98,16 +110,25 @@ function Editor() {
               time: result.time,
               method: result.payment_method,
               summary: result.items_summary,
-              notes: '', // User can add later
-              defaultMethod: '' // We prioritize extracted method
+              notes: '',
+              defaultMethod: ''
           });
+
+          // Handle Amount
+          let displayAmount = undefined;
+          if (result.amount) {
+              const rawAmt = parseFloat(result.amount);
+              // AI Scan -> Receipt -> Expense
+              setTransactionType('expense');
+              displayAmount = Math.abs(rawAmt).toString();
+          }
 
           setFormData(prev => ({
               ...prev,
               date: result.date || prev.date,
               time: result.time || prev.time,
               payee: bestPayee || prev.payee,
-              amount: result.amount ? (parseFloat(result.amount) * -1).toString() : prev.amount, // Expense is negative
+              amount: displayAmount !== undefined ? displayAmount : prev.amount,
               category: bestCategory || prev.category,
               memo: formattedMemo || prev.memo
           }));
@@ -129,7 +150,7 @@ function Editor() {
       e.target.value = null;
 
       if (file.type === 'application/pdf') {
-          // Skip cropping for PDF for now (or handle conversion first)
+          // Skip cropping for PDF for now
           processFile(file, true);
       } else {
           // Open Cropper
@@ -149,13 +170,12 @@ function Editor() {
 
   const handleCropCancel = () => {
       setCroppingImage(null);
-      // Also maybe clear the input? handled in handleImageUpload
   };
 
   const processFile = async (file, isPdf = false) => {
       setIsProcessing(true);
       setOcrStatus('Initializing...');
-      setFileObject(file);
+      // fileObject removed as it was unused
 
       try {
           let fileToProcess = file;
@@ -189,7 +209,6 @@ function Editor() {
               const settings = await storageService.getSettings();
               const strategy = settings.ocrProvider || 'auto';
 
-              // Basic OCR for quick preview / fallback
               const text = await ocrService.recognize(fileToProcess, (m) => {
                       if (m.status === 'recognizing text') {
                           setOcrStatus(`Scanning: ${(m.progress * 100).toFixed(0)}%`);
@@ -212,16 +231,24 @@ function Editor() {
               const formattedMemo = formatMemo({
                   time: parsed.time,
                   method: '',
-                  summary: '', // No summary from simple OCR
+                  summary: '',
                   notes: '',
-                  defaultMethod: settings.defaultPaymentMode // Use default from settings
+                  defaultMethod: settings.defaultPaymentMode
               });
+
+              // Handle Amount
+              let parsedAmount = parsed.amount;
+              if (parsedAmount) {
+                  const val = parseFloat(parsedAmount);
+                  setTransactionType('expense');
+                  parsedAmount = Math.abs(val).toString();
+              }
 
               setFormData(prev => ({
                   ...prev,
                   date: parsed.date || prev.date,
                   payee: bestPayee || prev.payee,
-                  amount: parsed.amount || prev.amount,
+                  amount: parsedAmount || prev.amount,
                   time: parsed.time || prev.time,
                   memo: formattedMemo || prev.memo
               }));
@@ -234,7 +261,6 @@ function Editor() {
           console.error(err);
       } finally {
           setIsProcessing(false);
-          // Clear status after 2 seconds if done
           setTimeout(() => {
              setOcrStatus((prev) => prev === 'Done' || prev === 'AI Success' ? '' : prev);
           }, 2000);
@@ -244,12 +270,27 @@ function Editor() {
   const handleClearImage = (e) => {
       e.preventDefault();
       setPreviewUrl(null);
-      setFileObject(null);
+      // setFileObject(null); // removed
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    await storageService.saveTransaction({ ...formData, image: previewUrl });
+
+    // Process Amount based on Type
+    const val = parseFloat(formData.amount);
+    let finalAmount = isNaN(val) ? 0 : val;
+
+    if (transactionType === 'expense') {
+        finalAmount = -Math.abs(finalAmount);
+    } else {
+        finalAmount = Math.abs(finalAmount);
+    }
+
+    await storageService.saveTransaction({
+        ...formData,
+        amount: finalAmount.toString(),
+        image: previewUrl
+    });
     navigate('/');
   };
 
@@ -386,15 +427,48 @@ function Editor() {
 
               <div className="space-y-2">
                   <Label>Amount</Label>
+
+                  {/* Transaction Type Toggle */}
+                  <div className="grid grid-cols-2 gap-3 mb-2">
+                      <button
+                        type="button"
+                        onClick={() => setTransactionType('expense')}
+                        className={cn(
+                            "flex items-center justify-center py-2 px-4 rounded-lg text-sm font-semibold transition-all border shadow-sm",
+                            transactionType === 'expense'
+                                ? "bg-red-50 border-red-200 text-red-700 ring-1 ring-red-200"
+                                : "bg-white border-slate-200 text-slate-600 hover:bg-slate-50 hover:border-slate-300"
+                        )}
+                      >
+                        Expense
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setTransactionType('income')}
+                        className={cn(
+                            "flex items-center justify-center py-2 px-4 rounded-lg text-sm font-semibold transition-all border shadow-sm",
+                            transactionType === 'income'
+                                ? "bg-emerald-50 border-emerald-200 text-emerald-700 ring-1 ring-emerald-200"
+                                : "bg-white border-slate-200 text-slate-600 hover:bg-slate-50 hover:border-slate-300"
+                        )}
+                      >
+                        Income
+                      </button>
+                  </div>
+
                   <div className="relative">
                       <span className="absolute left-3 top-2.5 text-slate-500 text-sm">$</span>
                       <Input
                         type="number"
                         step="0.01"
+                        inputMode="decimal"
                         name="amount"
                         value={formData.amount}
                         onChange={handleChange}
-                        className="pl-7 font-mono font-medium"
+                        className={cn(
+                            "pl-7 font-mono font-medium",
+                            transactionType === 'expense' ? "text-red-600" : "text-emerald-600"
+                        )}
                         placeholder="0.00"
                         required
                       />
