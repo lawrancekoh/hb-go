@@ -124,25 +124,16 @@ function normalizeDate(dateStr) {
              // If local OCR (tesseract) runs on user machine, maybe we could use locale, but here we are in a pure function.
              // Let's assume DMY unless Month > 12
              if (p2 > 12) {
-                 // Format is definitely MDY if p1 <= 12? No, if p2 > 12 it must be M/D/Y where M is p1?
-                 // Wait.
-                 // If 13/01/2023 -> 13 is Day. So DMY.
-                 // If 01/13/2023 -> 13 is Day. So MDY.
-                 // If 05/04/2023 -> Ambiguous.
+                 // If p2 > 12, then p2 MUST be the day (assuming p3 is year).
+                 // So p1 MUST be the month.
 
-                 // If p1 > 12, p1 is Day.
+                 // If p1 also > 12, then we have an invalid date (Day > 12, Month > 12, Year).
                  if (p1 > 12) {
-                     d = p1; m = p2; y = p3;
-                 } else if (p2 > 12) {
-                     // p2 is Day.
-                     m = p1; d = p2; y = p3;
-                 } else {
-                     // Ambiguous. Prefer DMY?
-                     // Let's stick to DMY for now or try to match user locale?
-                     // Since I cannot access user locale easily here without passing it in.
-                     // I will default to DMY.
-                     d = p1; m = p2; y = p3;
+                     return null; // Invalid date
                  }
+
+                 // Otherwise, MDY format: p1=Month, p2=Day, p3=Year
+                 m = p1; d = p2; y = p3;
             } else {
                  // Assume DMY
                  d = p1; m = p2; y = p3;
