@@ -1,5 +1,5 @@
 import { useParams, useNavigate } from 'react-router-dom';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { storageService } from '../services/storage';
 import { ocrService } from '../services/ocr';
 import { formatMemo } from '../services/ocrUtils';
@@ -37,6 +37,8 @@ function Editor() {
   const [previewUrl, setPreviewUrl] = useState(null);
   const [aiConfig, setAiConfig] = useState(null);
   const [croppingImage, setCroppingImage] = useState(null); // Base64 of image being cropped
+
+  const amountInputRef = useRef(null);
 
   // Load Data
   useEffect(() => {
@@ -116,11 +118,18 @@ function Editor() {
 
           // Handle Amount
           let displayAmount = undefined;
-          if (result.amount) {
+          if (result.amount !== undefined && result.amount !== null) {
               const rawAmt = parseFloat(result.amount);
               // AI Scan -> Receipt -> Expense
               setTransactionType('expense');
               displayAmount = Math.abs(rawAmt).toString();
+
+              // If amount is 0 (likely object scan), focus the input
+              if (rawAmt === 0) {
+                 setTimeout(() => {
+                     amountInputRef.current?.focus();
+                 }, 100);
+              }
           }
 
           setFormData(prev => ({
@@ -350,7 +359,7 @@ function Editor() {
                                 )}
                            </div>
                            <p className="font-medium text-slate-900">
-                               {aiConfig ? "Tap to Scan with AI" : "Tap to Scan Receipt"}
+                               {aiConfig ? "Scan a receipt, or snap a photo of the item!" : "Tap to Scan Receipt"}
                            </p>
                            <p className="text-xs text-slate-500 mt-1">Supports Image & PDF</p>
                       </div>
@@ -459,6 +468,7 @@ function Editor() {
                   <div className="relative">
                       <span className="absolute left-3 top-2.5 text-slate-500 text-sm">$</span>
                       <Input
+                        ref={amountInputRef}
                         type="number"
                         step="0.01"
                         inputMode="decimal"

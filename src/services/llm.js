@@ -60,7 +60,7 @@ export const llmService = {
     }
 
     // Sort models: prioritized models first
-    const priorities = ['gemini-1.5-flash', 'gpt-4o-mini', 'gpt-4o', 'gemini-1.5-pro'];
+    const priorities = ['gemini-1.5-flash-8b', 'gemini-1.5-flash', 'gpt-4o-mini', 'gpt-4o', 'gemini-1.5-pro'];
 
     models.sort((a, b) => {
       const indexA = priorities.findIndex(p => a.includes(p));
@@ -97,7 +97,23 @@ export const llmService = {
       reader.readAsDataURL(imageFile);
     });
 
-    const SYSTEM_PROMPT = "Analyze this receipt image. Return ONLY a strict JSON object (no markdown, no backticks). Fields: date (YYYY-MM-DD), time (HH:MM), merchant (string), amount (number, total only), currency (symbol), category_guess (string based on merchant), payment_method (string e.g. Visa, Cash, Amex), items_summary (string, max 5 words summary of items).";
+    const SYSTEM_PROMPT = `Analyze this image. It is either a receipt or a general object/item. Return ONLY a strict JSON object (no markdown, no backticks).
+
+    1. If it is a RECEIPT:
+       - Extract: date (YYYY-MM-DD), time (HH:MM), merchant (string), amount (number, total only), currency (symbol).
+       - category_guess: derived from merchant.
+       - payment_method: string (e.g. Visa, Cash, Amex).
+       - items_summary: string, max 5 words summary of items.
+       - is_receipt: true.
+
+    2. If it is an OBJECT (no receipt text found):
+       - merchant: Guess based on brand/logo or object type (e.g., "Starbucks", "Vending Machine", "Taxi", "Apple").
+       - category_guess: Derive from the object type (e.g., "Food", "Electronics", "Transport").
+       - items_summary: Describe the visual object (e.g., "Latte", "Blue Keyboard").
+       - amount: Return 0 (zero).
+       - is_receipt: false.
+       - date: Today's date (YYYY-MM-DD) if unknown.
+    `;
 
     let responseText = '';
 

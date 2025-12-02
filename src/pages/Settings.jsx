@@ -209,6 +209,13 @@ function Settings() {
                               <option key={m} value={m}>{m}</option>
                           ))}
                       </select>
+                      {/* Model Help Text */}
+                      {aiConfig.provider !== 'custom' && (
+                         <div className="bg-blue-50 text-blue-800 p-3 rounded-md text-sm space-y-1 border border-blue-100 mt-2">
+                            <p>⚠️ <strong>Requirement:</strong> You must choose a <strong>Vision (Multi-modal)</strong> model to scan images.</p>
+                            <p>✅ <strong>Recommended for Speed & Cost:</strong> <code>gemini-1.5-flash</code> (or newer <code>flash-lite</code>), <code>gpt-4o-mini</code>.</p>
+                         </div>
+                      )}
                   </div>
               )}
 
