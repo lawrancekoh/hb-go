@@ -362,7 +362,7 @@ function Editor() {
                       <div className="text-center p-6 relative">
                            {/* AI Badge */}
                            {aiConfig && (
-                               <div className="absolute -top-2 left-1/2 -translate-x-1/2 bg-indigo-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm flex items-center gap-1">
+                               <div className="absolute -top-2 left-1/2 -translate-x-1/2 bg-brand-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm flex items-center gap-1">
                                    <Sparkles className="h-3 w-3" /> AI READY
                                </div>
                            )}
@@ -370,7 +370,7 @@ function Editor() {
                            <div className="bg-white p-4 rounded-full shadow-sm inline-flex mb-4 relative dark:bg-slate-700">
                                 <Camera className="h-8 w-8 text-brand-600 dark:text-brand-400" />
                                 {aiConfig && (
-                                    <div className="absolute -top-1 -right-1 bg-indigo-600 text-white rounded-full p-1 border-2 border-white dark:border-slate-700">
+                                    <div className="absolute -top-1 -right-1 bg-brand-600 text-white rounded-full p-1 border-2 border-white dark:border-slate-700">
                                         <Sparkles className="h-3 w-3" />
                                     </div>
                                 )}

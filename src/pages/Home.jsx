@@ -68,19 +68,19 @@ function Home() {
     <div className="flex flex-col gap-6 pb-20 relative min-h-[80vh]">
 
       {/* Summary Card */}
-      <Card className="bg-gradient-to-br from-brand-600 to-brand-700 text-white border-none shadow-lg dark:from-brand-800 dark:to-brand-900">
+      <Card className="bg-gradient-to-br from-slate-800 to-slate-900 text-white border-none shadow-lg dark:from-slate-800 dark:to-slate-950">
           <CardContent className="p-6 flex justify-between items-center">
               <div>
-                  <p className="text-brand-100 text-sm font-medium">Total Pending</p>
-                  <p className="text-4xl font-bold mt-1">${totalAmount.toFixed(2)}</p>
-                  <p className="text-brand-200 text-xs mt-2">{transactions.length} transactions</p>
+                  <p className="text-slate-300 text-sm font-medium">Total Pending</p>
+                  <p className="text-4xl font-bold mt-1 text-emerald-400">${totalAmount.toFixed(2)}</p>
+                  <p className="text-slate-400 text-xs mt-2">{transactions.length} transactions</p>
               </div>
               <div className="flex gap-2">
                 <Button
                   href="/editor/new"
                   variant="secondary"
                   size="sm"
-                  className="hidden md:inline-flex gap-2 bg-white text-brand-700 hover:bg-slate-100 border-0 dark:bg-slate-800 dark:text-brand-400"
+                  className="hidden md:inline-flex gap-2 bg-emerald-500 text-white hover:bg-emerald-600 border-0 dark:bg-emerald-600 dark:text-white"
                 >
                   <Plus className="h-4 w-4" /> New Transaction
                 </Button>
@@ -107,7 +107,7 @@ function Home() {
             <div className="bg-white p-3 rounded-full w-fit mx-auto shadow-sm mb-4 group-hover:scale-110 transition-transform relative dark:bg-slate-700">
                 <Camera className="h-8 w-8 text-brand-600 dark:text-brand-400" />
                 {isAiEnabled && (
-                    <div className="absolute -top-1 -right-1 bg-indigo-600 text-white rounded-full p-1 border-2 border-white dark:border-slate-700">
+                    <div className="absolute -top-1 -right-1 bg-brand-600 text-white rounded-full p-1 border-2 border-white dark:border-slate-700">
                         <Sparkles className="h-3 w-3" />
                     </div>
                 )}
@@ -166,7 +166,7 @@ function Home() {
       <div className="fixed bottom-6 right-6 z-40 md:hidden">
         <Button
             href="/editor/new"
-            className="h-14 w-14 rounded-full shadow-xl bg-brand-600 hover:bg-brand-700 p-0 flex items-center justify-center transition-transform hover:scale-105 active:scale-95"
+            className="h-14 w-14 rounded-full shadow-xl bg-emerald-500 hover:bg-emerald-600 p-0 flex items-center justify-center transition-transform hover:scale-105 active:scale-95"
             aria-label="New Transaction"
         >
             <Plus className="h-8 w-8 text-white" />

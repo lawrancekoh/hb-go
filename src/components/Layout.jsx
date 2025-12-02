@@ -1,6 +1,7 @@
 import { Link, useLocation } from 'react-router-dom';
-import { Archive, Settings, HelpCircle, FastForward } from 'lucide-react';
+import { Archive, Settings, HelpCircle } from 'lucide-react';
 import { cn } from '../lib/utils';
+import { Logo } from './Branding';
 
 function Layout({ children }) {
   const location = useLocation();
@@ -14,11 +15,11 @@ function Layout({ children }) {
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex flex-col font-sans text-slate-900 dark:text-slate-100">
       {/* Header */}
-      <header className="bg-brand-600 dark:bg-brand-900 text-white shadow-md sticky top-0 z-50">
+      <header className="bg-slate-900 text-white shadow-md sticky top-0 z-50">
         <div className="container mx-auto px-4 h-14 flex justify-between items-center">
           <Link to="/" className="text-xl font-bold flex items-center gap-2 hover:opacity-90 transition-opacity">
-            <FastForward className="h-6 w-6" />
-            <span>HB Go</span>
+            <Logo className="h-8 w-8" />
+            <span className="text-white">HB Go</span>
           </Link>
 
           {/* Desktop Nav */}
