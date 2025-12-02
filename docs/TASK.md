@@ -41,7 +41,8 @@
     - [ ] Refine Home Page UX (Relocate FAB on desktop, improve empty state) <!-- id: 36 -->
 - [ ] Phase 6: FTUE & Refinements <!-- id: 42 -->
     - [ ] Implement Default Data Seeding <!-- id: 43 -->
-    - [ ] Fix Image Cropping (Dynamic aspect ratio, Rotation) <!-- id: 44 -->
+    - [x] Fix Image Cropping (Dynamic aspect ratio, Rotation) <!-- id: 44 -->
+    - [ ] Improve Image Cropper Mobile Layout & Default Crop <!-- id: 47 -->
     - [ ] Implement Onboarding Wizard <!-- id: 45 -->
     - [ ] Cleanup Settings Page (Remove OCR options) <!-- id: 46 -->
 - [ ] Phase 7: Documentation & Final Touches <!-- id: 37 -->
