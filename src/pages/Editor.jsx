@@ -74,8 +74,20 @@ function Editor() {
             }
         } else {
             const settings = await storageService.getSettings();
+            const updates = {};
+
             if (settings.defaultTag) {
-                setFormData(prev => ({ ...prev, tags: settings.defaultTag }));
+                updates.tags = settings.defaultTag;
+            }
+
+            // Set Default Category
+            const defaultCategory = localStorage.getItem('hb_default_category');
+            if (defaultCategory) {
+                updates.category = defaultCategory;
+            }
+
+            if (Object.keys(updates).length > 0) {
+                setFormData(prev => ({ ...prev, ...updates }));
             }
         }
     };
@@ -105,6 +117,11 @@ function Editor() {
           if (result.category_guess && categories.length > 0) {
               const match = matchingService.findBestMatch(result.category_guess, categories);
               if (match) bestCategory = match;
+          }
+
+          // Fallback to default category if no match
+          if (!bestCategory) {
+              bestCategory = localStorage.getItem('hb_default_category') || '';
           }
 
           // Format Memo

@@ -3,6 +3,8 @@
 ## [1.0.0] - 2025-12-02
 
 ### 🚀 Features
+*   Added Manual Theme Switcher (System/Light/Dark).
+*   Added Default Category preference for faster entry.
 *   Offline-first architecture (PWA).
 *   Manual Transaction Entry.
 *   HomeBank `.xhb` file import for Categories/Payees.
