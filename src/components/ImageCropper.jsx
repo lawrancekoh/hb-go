@@ -1,11 +1,10 @@
-import { useState, useCallback } from 'react';
-import Cropper from 'react-easy-crop';
+import { useState, useRef, useEffect } from 'react';
+import ReactCrop, { centerCrop, makeAspectCrop } from 'react-image-crop';
+import 'react-image-crop/dist/ReactCrop.css';
 import { Button } from './ui/Button';
 import { Check, X, RotateCw } from 'lucide-react';
 
-/**
- * Creates an Image object from a URL.
- */
+// Helper to load image
 const createImage = (url) =>
   new Promise((resolve, reject) => {
     const image = new Image();
@@ -15,174 +14,171 @@ const createImage = (url) =>
     image.src = url;
   });
 
-function getRadianAngle(degreeValue) {
-  return (degreeValue * Math.PI) / 180;
-}
-
-/**
- * Returns the new bounding area of a rotated rectangle.
- */
-function rotateSize(width, height, rotation) {
-  const rotRad = getRadianAngle(rotation);
-
-  return {
-    width:
-      Math.abs(Math.cos(rotRad) * width) + Math.abs(Math.sin(rotRad) * height),
-    height:
-      Math.abs(Math.sin(rotRad) * width) + Math.abs(Math.cos(rotRad) * height),
-  };
-}
-
-/**
- * Generates a cropped image blob from the source image, handling rotation.
- */
-async function getCroppedImg(
-  imageSrc,
-  pixelCrop,
-  rotation = 0,
-  flip = { horizontal: false, vertical: false }
-) {
-  const image = await createImage(imageSrc);
+// Helper to crop
+async function getCroppedImg(image, crop) {
   const canvas = document.createElement('canvas');
+  const scaleX = image.naturalWidth / image.width;
+  const scaleY = image.naturalHeight / image.height;
+
+  // Handle crop units (px vs %)
+  let pixelCrop = crop;
+
+  if (crop.unit === '%') {
+    pixelCrop = {
+      x: (crop.x * image.width) / 100,
+      y: (crop.y * image.height) / 100,
+      width: (crop.width * image.width) / 100,
+      height: (crop.height * image.height) / 100,
+    };
+  }
+
+  canvas.width = pixelCrop.width * scaleX;
+  canvas.height = pixelCrop.height * scaleY;
+
   const ctx = canvas.getContext('2d');
 
   if (!ctx) {
-    return null;
+      throw new Error('No 2d context');
   }
 
-  const rotRad = getRadianAngle(rotation);
-
-  // Calculate bounding box of the rotated image
-  const { width: bBoxWidth, height: bBoxHeight } = rotateSize(
-    image.width,
-    image.height,
-    rotation
+  ctx.drawImage(
+    image,
+    pixelCrop.x * scaleX,
+    pixelCrop.y * scaleY,
+    pixelCrop.width * scaleX,
+    pixelCrop.height * scaleY,
+    0,
+    0,
+    canvas.width,
+    canvas.height
   );
 
-  // Set canvas size to match the bounding box
-  canvas.width = bBoxWidth;
-  canvas.height = bBoxHeight;
-
-  // Translate canvas context to a central location to allow rotating and flipping around the center
-  ctx.translate(bBoxWidth / 2, bBoxHeight / 2);
-  ctx.rotate(rotRad);
-  ctx.scale(flip.horizontal ? -1 : 1, flip.vertical ? -1 : 1);
-  ctx.translate(-image.width / 2, -image.height / 2);
-
-  // Draw rotated image
-  ctx.drawImage(image, 0, 0);
-
-  // Extract the cropped image using the pixelCrop values (relative to the rotated image)
-  const data = ctx.getImageData(
-    pixelCrop.x,
-    pixelCrop.y,
-    pixelCrop.width,
-    pixelCrop.height
-  );
-
-  // Set canvas width to final desired crop size - this will clear existing context
-  canvas.width = pixelCrop.width;
-  canvas.height = pixelCrop.height;
-
-  // Paste generated rotated image at the top left corner
-  ctx.putImageData(data, 0, 0);
-
-  // Return as a blob
   return new Promise((resolve, reject) => {
-    canvas.toBlob((file) => {
-      if (file) {
-        resolve(file);
-      } else {
-        reject(new Error('Canvas is empty'));
-      }
+    canvas.toBlob((blob) => {
+      if (blob) resolve(blob);
+      else reject(new Error('Canvas is empty'));
     }, 'image/jpeg');
   });
 }
 
+// Helper to rotate the source image itself
+async function rotateImageSource(imageSrc, degrees) {
+    const image = await createImage(imageSrc);
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+
+    // Swap dimensions for 90/270
+    if (degrees === 90 || degrees === 270) {
+        canvas.width = image.height;
+        canvas.height = image.width;
+    } else {
+        canvas.width = image.width;
+        canvas.height = image.height;
+    }
+
+    ctx.translate(canvas.width / 2, canvas.height / 2);
+    ctx.rotate((degrees * Math.PI) / 180);
+    ctx.drawImage(image, -image.width / 2, -image.height / 2);
+
+    return new Promise((resolve) => {
+        canvas.toBlob((blob) => {
+            resolve(URL.createObjectURL(blob));
+        }, 'image/jpeg');
+    });
+}
+
 export default function ImageCropper({ imageSrc, onCancel, onConfirm }) {
-  const [crop, setCrop] = useState({ x: 0, y: 0 });
-  const [zoom, setZoom] = useState(1);
-  const [rotation, setRotation] = useState(0);
-  const [croppedAreaPixels, setCroppedAreaPixels] = useState(null);
-  const [initialCroppedArea, setInitialCroppedArea] = useState(null);
+  const [currentImg, setCurrentImg] = useState(imageSrc);
+  const [crop, setCrop] = useState();
+  const [completedCrop, setCompletedCrop] = useState();
+  const imgRef = useRef(null);
 
-  const onMediaLoaded = useCallback((mediaSize) => {
-    const { width, height } = mediaSize;
-    // Default to full image crop
-    setInitialCroppedArea({ x: 0, y: 0, width, height });
-  }, []);
+  // Update currentImg if prop changes
+  useEffect(() => {
+    setCurrentImg(imageSrc);
+  }, [imageSrc]);
 
-  const onCropComplete = useCallback((croppedArea, croppedAreaPixels) => {
-    setCroppedAreaPixels(croppedAreaPixels);
-  }, []);
+  // Clean up blob URLs if we created any
+  useEffect(() => {
+    return () => {
+      if (currentImg && currentImg !== imageSrc && currentImg.startsWith('blob:')) {
+        URL.revokeObjectURL(currentImg);
+      }
+    };
+  }, [currentImg, imageSrc]);
+
+  // Initialize crop on load
+  function onImageLoad(e) {
+    const { width, height } = e.currentTarget;
+    const initialCrop = centerCrop(
+      makeAspectCrop(
+        {
+          unit: '%',
+          width: 90,
+        },
+        undefined,
+        width,
+        height
+      ),
+      width,
+      height
+    );
+    setCrop(initialCrop);
+    setCompletedCrop(initialCrop);
+  }
+
+  const handleRotate = async () => {
+     if (!currentImg) return;
+     try {
+         const newUrl = await rotateImageSource(currentImg, 90);
+         setCurrentImg(newUrl);
+         // setCrop will happen in onImageLoad
+     } catch (e) {
+         console.error("Rotation failed", e);
+     }
+  };
 
   const handleConfirm = async () => {
-    try {
-      if (!croppedAreaPixels) return;
-      const croppedBlob = await getCroppedImg(
-        imageSrc,
-        croppedAreaPixels,
-        rotation
-      );
-      onConfirm(croppedBlob);
-    } catch (e) {
-      console.error(e);
-      // Optional: Show error to user? For now just log.
+    if (completedCrop && imgRef.current) {
+        try {
+            const blob = await getCroppedImg(imgRef.current, completedCrop);
+            onConfirm(blob);
+        } catch(e) {
+            console.error(e);
+        }
     }
   };
 
-  const rotate = () => {
-    setRotation((prevRotation) => prevRotation + 90);
-  };
-
   return (
-    <div className="fixed inset-0 z-50 bg-black flex flex-col">
-      <div className="relative flex-1 bg-black">
-        <Cropper
-          image={imageSrc}
-          crop={crop}
-          zoom={zoom}
-          rotation={rotation}
-          aspect={undefined} // Free-form cropping
-          initialCroppedAreaPixels={initialCroppedArea}
-          onCropChange={setCrop}
-          onCropComplete={onCropComplete}
-          onZoomChange={setZoom}
-          onRotationChange={setRotation}
-          onMediaLoaded={onMediaLoaded}
-          showGrid={true}
-        />
+    <div className="fixed inset-0 z-50 bg-black flex flex-col h-screen">
+      <div className="flex-1 overflow-auto flex items-center justify-center p-4">
+        {currentImg && (
+            <ReactCrop
+                crop={crop}
+                onChange={(c) => setCrop(c)}
+                onComplete={(c) => setCompletedCrop(c)}
+            >
+                <img
+                    ref={imgRef}
+                    src={currentImg}
+                    onLoad={onImageLoad}
+                    style={{ maxHeight: '70vh', maxWidth: '100%', display: 'block' }}
+                    alt="Receipt"
+                />
+            </ReactCrop>
+        )}
       </div>
 
-      {/* Controls */}
-      <div className="bg-white p-4 flex flex-col gap-4 pb-safe">
-        {/* Zoom Control */}
-        <div className="flex items-center justify-between px-4">
-          <span className="text-sm font-medium text-slate-500">Zoom</span>
-          <input
-            type="range"
-            value={zoom}
-            min={1}
-            max={3}
-            step={0.1}
-            aria-labelledby="Zoom"
-            onChange={(e) => setZoom(Number(e.target.value))}
-            className="w-2/3"
-          />
-        </div>
-
-        {/* Action Buttons */}
-        <div className="flex gap-4">
+      <div className="bg-white p-4 pb-safe flex gap-4 shrink-0 shadow-up z-10">
           <Button variant="outline" className="flex-1 gap-2" onClick={onCancel}>
             <X className="h-4 w-4" /> Cancel
           </Button>
-          <Button variant="outline" onClick={rotate} title="Rotate 90°">
+          <Button variant="outline" onClick={handleRotate} title="Rotate 90°">
             <RotateCw className="h-4 w-4" />
           </Button>
-          <Button className="flex-1 gap-2" onClick={handleConfirm}>
+          <Button className="flex-1 gap-2 bg-green-600 hover:bg-green-700 text-white" onClick={handleConfirm}>
             <Check className="h-4 w-4" /> Confirm
           </Button>
-        </div>
       </div>
     </div>
   );
