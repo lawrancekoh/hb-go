@@ -2,13 +2,16 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useState, useEffect, useRef } from 'react';
 import { storageService } from '../services/storage';
 import { ocrService } from '../services/ocr';
+import { formatMemo } from '../services/ocrUtils';
 import { llmService } from '../services/llm';
+import { matchingService } from '../services/matching';
 import { ArrowLeft, Save, Loader2, Camera, Upload, X, Sparkles } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { Label } from '../components/ui/Label';
 import { Card } from '../components/ui/Card';
 import { cn } from '../lib/utils';
+import ImageCropper from '../components/ImageCropper';
 
 function Editor() {
   const { id } = useParams();
@@ -32,6 +35,7 @@ function Editor() {
   const [previewUrl, setPreviewUrl] = useState(null);
   const [fileObject, setFileObject] = useState(null); // Keep reference to file for AI
   const [aiConfig, setAiConfig] = useState(null);
+  const [croppingImage, setCroppingImage] = useState(null); // Base64 of image being cropped
 
   // Load Data
   useEffect(() => {
@@ -72,29 +76,40 @@ function Editor() {
       try {
            const result = await llmService.scanReceiptWithAI(fileToScan, aiConfig);
 
-          // Fuzzy match category
+          // Smart match payee
+          let bestPayee = result.merchant || '';
+          if (payees.length > 0 && result.merchant) {
+               const match = matchingService.findBestMatch(result.merchant, payees);
+               if (match) bestPayee = match;
+          }
+
+          // Smart match category
           let bestCategory = '';
+          const categoryToMatch = result.category_guess || bestPayee; // Use payee for category matching if guess missing? No, mostly guess
+          // If we have a known payee, we might want to check its usual category? (Not implemented here, reliant on AI's guess or simple text match)
+
           if (result.category_guess && categories.length > 0) {
-              const guess = result.category_guess.toLowerCase();
-              // 1. Exact match (insensitive)
-              let match = categories.find(c => c.toLowerCase() === guess);
-
-              // 2. Contains match
-              if (!match) {
-                  match = categories.find(c => c.toLowerCase().includes(guess) || guess.includes(c.toLowerCase()));
-              }
-
+              const match = matchingService.findBestMatch(result.category_guess, categories);
               if (match) bestCategory = match;
           }
+
+          // Format Memo
+          const formattedMemo = formatMemo({
+              time: result.time,
+              method: result.payment_method,
+              summary: result.items_summary,
+              notes: '', // User can add later
+              defaultMethod: '' // We prioritize extracted method
+          });
 
           setFormData(prev => ({
               ...prev,
               date: result.date || prev.date,
               time: result.time || prev.time,
-              payee: result.merchant || prev.payee,
+              payee: bestPayee || prev.payee,
               amount: result.amount ? (parseFloat(result.amount) * -1).toString() : prev.amount, // Expense is negative
               category: bestCategory || prev.category,
-              memo: `[AI] ${prev.memo}`.trim()
+              memo: formattedMemo || prev.memo
           }));
 
           setOcrStatus('AI Success');
@@ -110,27 +125,51 @@ function Editor() {
       const file = e.target.files[0];
       if (!file) return;
 
+      // Reset value so same file can be selected again if needed
+      e.target.value = null;
+
+      if (file.type === 'application/pdf') {
+          // Skip cropping for PDF for now (or handle conversion first)
+          processFile(file, true);
+      } else {
+          // Open Cropper
+          const reader = new FileReader();
+          reader.onload = () => {
+              setCroppingImage(reader.result);
+          };
+          reader.readAsDataURL(file);
+      }
+  };
+
+  const handleCropConfirm = async (croppedBlob) => {
+      setCroppingImage(null);
+      const file = new File([croppedBlob], "cropped_receipt.jpg", { type: "image/jpeg" });
+      await processFile(file);
+  };
+
+  const handleCropCancel = () => {
+      setCroppingImage(null);
+      // Also maybe clear the input? handled in handleImageUpload
+  };
+
+  const processFile = async (file, isPdf = false) => {
       setIsProcessing(true);
       setOcrStatus('Initializing...');
-
-      // Store file object for AI
       setFileObject(file);
 
       try {
           let fileToProcess = file;
           let previewData = null;
 
-          if (file.type === 'application/pdf') {
+          if (isPdf) {
               setOcrStatus('Converting PDF...');
               const convertedImage = await ocrService.convertPdfToImage(file);
-              // convertedImage is a data URL string
               previewData = convertedImage;
 
               // Convert base64 data URL to Blob for OCR/AI processing
               const res = await fetch(convertedImage);
               const blob = await res.blob();
               fileToProcess = new File([blob], "converted.png", { type: "image/png" });
-
           } else {
               const reader = new FileReader();
               const base64Promise = new Promise((resolve) => {
@@ -147,7 +186,6 @@ function Editor() {
               await performAiScan(fileToProcess);
           } else {
               setOcrStatus('Reading text...');
-
               const settings = await storageService.getSettings();
               const strategy = settings.ocrProvider || 'auto';
 
@@ -163,12 +201,29 @@ function Editor() {
               setOcrStatus('Parsing...');
               const parsed = ocrService.parseText(text);
 
+              // Smart match payee
+              let bestPayee = parsed.merchant || '';
+              if (payees.length > 0 && parsed.merchant) {
+                   const match = matchingService.findBestMatch(parsed.merchant, payees);
+                   if (match) bestPayee = match;
+              }
+
+              // Format Memo for Manual Fallback
+              const formattedMemo = formatMemo({
+                  time: parsed.time,
+                  method: '',
+                  summary: '', // No summary from simple OCR
+                  notes: '',
+                  defaultMethod: settings.defaultPaymentMode // Use default from settings
+              });
+
               setFormData(prev => ({
                   ...prev,
                   date: parsed.date || prev.date,
-                  payee: parsed.merchant || prev.payee,
+                  payee: bestPayee || prev.payee,
                   amount: parsed.amount || prev.amount,
                   time: parsed.time || prev.time,
+                  memo: formattedMemo || prev.memo
               }));
 
               setOcrStatus('Done');
@@ -181,7 +236,6 @@ function Editor() {
           setIsProcessing(false);
           // Clear status after 2 seconds if done
           setTimeout(() => {
-             // Only clear if we are not processing another request
              setOcrStatus((prev) => prev === 'Done' || prev === 'AI Success' ? '' : prev);
           }, 2000);
       }
@@ -201,6 +255,15 @@ function Editor() {
 
   return (
     <div className="flex flex-col gap-6 max-w-4xl mx-auto">
+      {/* Cropper Modal */}
+      {croppingImage && (
+          <ImageCropper
+            imageSrc={croppingImage}
+            onCancel={handleCropCancel}
+            onConfirm={handleCropConfirm}
+          />
+      )}
+
       {/* Header */}
       <div className="flex items-center gap-4">
         <Button variant="ghost" size="icon" onClick={() => navigate('/')}>

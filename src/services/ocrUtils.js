@@ -161,3 +161,32 @@ function normalizeDate(dateStr) {
 
     return null;
 }
+
+/**
+ * Formats the memo field based on available data.
+ * @param {Object} params
+ * @param {string} [params.time] - HH:MM
+ * @param {string} [params.method] - Payment method (e.g., Visa, Cash)
+ * @param {string} [params.summary] - Summary of items
+ * @param {string} [params.notes] - Additional user notes
+ * @param {string} [params.defaultMethod] - Default payment method from settings
+ * @returns {string} - Formatted memo string
+ */
+export const formatMemo = ({ time, method, summary, notes, defaultMethod }) => {
+    // Logic:
+    // AI: [14:30] [Visa] Coffee, Bagel
+    // Manual/Fallback: [14:30] [Credit Card] (User Notes)
+
+    const parts = [];
+
+    if (time) parts.push(`[${time}]`);
+
+    // Use extracted method or default method
+    const finalMethod = method || defaultMethod;
+    if (finalMethod) parts.push(`[${finalMethod}]`);
+
+    if (summary) parts.push(summary);
+    if (notes) parts.push(notes);
+
+    return parts.join(' ');
+};

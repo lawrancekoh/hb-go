@@ -97,7 +97,7 @@ export const llmService = {
       reader.readAsDataURL(imageFile);
     });
 
-    const SYSTEM_PROMPT = "Analyze this receipt image. Return ONLY a strict JSON object (no markdown, no backticks). Fields: date (YYYY-MM-DD), time (HH:MM), merchant (string), amount (number, total only), currency (symbol), category_guess (string based on merchant).";
+    const SYSTEM_PROMPT = "Analyze this receipt image. Return ONLY a strict JSON object (no markdown, no backticks). Fields: date (YYYY-MM-DD), time (HH:MM), merchant (string), amount (number, total only), currency (symbol), category_guess (string based on merchant), payment_method (string e.g. Visa, Cash, Amex), items_summary (string, max 5 words summary of items).";
 
     let responseText = '';
 
