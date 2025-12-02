@@ -204,6 +204,7 @@ export default function ImageCropper({ imageSrc, onCancel, onConfirm }) {
                 keepSelection={true}
                 style={{
                     width: `${scale * 100}%`,
+                    maxWidth: 'none',
                     transition: 'width 0.1s ease-out',
                     flexShrink: 0
                 }}
