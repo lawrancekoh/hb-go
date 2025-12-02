@@ -91,6 +91,7 @@ export default function ImageCropper({ imageSrc, onCancel, onConfirm }) {
   const [currentImg, setCurrentImg] = useState(imageSrc);
   const [crop, setCrop] = useState();
   const [completedCrop, setCompletedCrop] = useState();
+  const [scale, setScale] = useState(1);
   const imgRef = useRef(null);
 
   // Update currentImg if prop changes
@@ -112,14 +113,14 @@ export default function ImageCropper({ imageSrc, onCancel, onConfirm }) {
     const { width, height, naturalWidth, naturalHeight } = e.currentTarget;
 
     // Calculate aspect ratio from natural dimensions to ensure the initial crop
-    // matches the image's aspect ratio (covering 90% of the image).
+    // matches the image's aspect ratio.
     const aspect = naturalWidth / naturalHeight;
 
     const initialCrop = centerCrop(
       makeAspectCrop(
         {
           unit: '%',
-          width: 90,
+          width: 80, // Default to 80% instead of 90%
         },
         aspect,
         width,
@@ -157,41 +158,60 @@ export default function ImageCropper({ imageSrc, onCancel, onConfirm }) {
   return (
     <div className="fixed inset-0 z-50 bg-black flex flex-col h-[100dvh]">
       {/* Header */}
-      <div className="text-white p-4 font-semibold text-center shrink-0">
+      <div className="text-white p-4 font-semibold text-center shrink-0 z-10 bg-black/50">
         Crop Receipt
       </div>
 
       {/* Middle - Image Area */}
-      <div className="flex-1 overflow-auto flex items-center justify-center p-4">
+      <div className="flex-1 overflow-auto flex items-center justify-center p-8 bg-neutral-900">
         {currentImg && (
-            <ReactCrop
-                crop={crop}
-                onChange={(c) => setCrop(c)}
-                onComplete={(c) => setCompletedCrop(c)}
-            >
-                <img
-                    ref={imgRef}
-                    src={currentImg}
-                    onLoad={onImageLoad}
-                    className="max-h-[65vh] w-auto"
-                    style={{ display: 'block' }}
-                    alt="Receipt"
-                />
-            </ReactCrop>
+            <div style={{ transform: `scale(${scale})`, transition: 'transform 0.1s' }}>
+                <ReactCrop
+                    crop={crop}
+                    onChange={(c) => setCrop(c)}
+                    onComplete={(c) => setCompletedCrop(c)}
+                >
+                    <img
+                        ref={imgRef}
+                        src={currentImg}
+                        onLoad={onImageLoad}
+                        className="max-h-[65vh] w-auto"
+                        style={{ display: 'block' }}
+                        alt="Receipt"
+                    />
+                </ReactCrop>
+            </div>
         )}
       </div>
 
       {/* Footer */}
-      <div className="bg-white p-4 pb-safe flex gap-4 shrink-0 shadow-up z-10">
-          <Button variant="outline" className="flex-1 gap-2" onClick={onCancel}>
-            <X className="h-4 w-4" /> Cancel
-          </Button>
-          <Button variant="outline" onClick={handleRotate} title="Rotate 90°">
-            <RotateCw className="h-4 w-4" />
-          </Button>
-          <Button className="flex-1 gap-2 bg-green-600 hover:bg-green-700 text-white" onClick={handleConfirm}>
-            <Check className="h-4 w-4" /> Confirm
-          </Button>
+      <div className="bg-white p-4 pb-safe flex flex-col gap-4 shrink-0 shadow-up z-10">
+          {/* Zoom Control */}
+          <div className="flex items-center gap-4 px-2">
+            <span className="text-xs text-gray-500 font-medium">Zoom</span>
+            <input
+              type="range"
+              min="0.5"
+              max="3.0"
+              step="0.1"
+              value={scale}
+              onChange={(e) => setScale(parseFloat(e.target.value))}
+              className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-indigo-600"
+            />
+          </div>
+
+          {/* Action Buttons */}
+          <div className="flex gap-4">
+              <Button variant="outline" className="flex-1 gap-2" onClick={onCancel}>
+                <X className="h-4 w-4" /> Cancel
+              </Button>
+              <Button variant="outline" onClick={handleRotate} title="Rotate 90°">
+                <RotateCw className="h-4 w-4" />
+              </Button>
+              <Button className="flex-1 gap-2 bg-green-600 hover:bg-green-700 text-white" onClick={handleConfirm}>
+                <Check className="h-4 w-4" /> Confirm
+              </Button>
+          </div>
       </div>
     </div>
   );

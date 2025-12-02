@@ -1,38 +1,42 @@
 import { Link, useNavigate } from 'react-router-dom';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { storageService } from '../services/storage';
 import { csvService } from '../services/csv';
-import { Camera, Trash2, Download, Tag, Edit3, Plus, Sparkles } from 'lucide-react';
+import { Camera, Trash2, Download, Tag, Plus, Sparkles } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 import { Card, CardContent } from '../components/ui/Card';
-import { cn } from '../lib/utils';
 
 function Home() {
   const [transactions, setTransactions] = useState([]);
   const [isAiEnabled, setIsAiEnabled] = useState(false);
   const navigate = useNavigate();
 
-  useEffect(() => {
-    loadTransactions();
-    checkAiConfig();
-  }, []);
-
-  const loadTransactions = async () => {
+  const loadTransactions = useCallback(async () => {
     const txs = await storageService.getTransactions();
     // Sort by date desc
     txs.sort((a, b) => new Date(b.date) - new Date(a.date));
     setTransactions(txs);
-  };
+  }, []);
 
-  const checkAiConfig = () => {
+  const checkAiConfig = useCallback(() => {
       const config = localStorage.getItem('hb_ai_config');
       if (config) {
           try {
             const parsed = JSON.parse(config);
             if (parsed.apiKey) setIsAiEnabled(true);
-          } catch (e) {}
+          } catch (e) {
+            // ignore error
+          }
       }
-  };
+  }, []);
+
+  useEffect(() => {
+    const init = async () => {
+        await loadTransactions();
+        checkAiConfig();
+    };
+    init();
+  }, [loadTransactions, checkAiConfig]);
 
   const handleDelete = async (e, id) => {
     e.preventDefault();
