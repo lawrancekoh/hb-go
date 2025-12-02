@@ -258,54 +258,6 @@ function Settings() {
           </CardContent>
       </Card>
 
-      {/* Scanner Settings */}
-      <Card>
-          <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                  <Scan className="h-5 w-5 text-brand-600" />
-                  Scanner Settings
-              </CardTitle>
-              <CardDescription>
-                  Choose how receipts are processed.
-              </CardDescription>
-          </CardHeader>
-          <CardContent>
-               <div className="space-y-3">
-                  <Label>OCR Engine</Label>
-                  <div className="flex flex-col gap-2">
-                      <label className="flex items-center gap-3 p-3 border rounded-lg cursor-pointer hover:bg-slate-50">
-                          <input
-                              type="radio"
-                              name="ocrProvider"
-                              value="auto"
-                              checked={settings.ocrProvider === 'auto'}
-                              onChange={handleSettingChange}
-                              className="text-brand-600 focus:ring-brand-500"
-                          />
-                          <div>
-                              <span className="font-medium text-slate-900 block">Auto (Recommended)</span>
-                              <span className="text-xs text-slate-500">Use System OCR if available, with Tesseract as backup.</span>
-                          </div>
-                      </label>
-                      <label className="flex items-center gap-3 p-3 border rounded-lg cursor-pointer hover:bg-slate-50">
-                          <input
-                              type="radio"
-                              name="ocrProvider"
-                              value="system"
-                              checked={settings.ocrProvider === 'system'}
-                              onChange={handleSettingChange}
-                              className="text-brand-600 focus:ring-brand-500"
-                          />
-                          <div>
-                              <span className="font-medium text-slate-900 block">System Only</span>
-                              <span className="text-xs text-slate-500">Use device's native text detection. Fast but may vary by device.</span>
-                          </div>
-                      </label>
-                  </div>
-               </div>
-          </CardContent>
-      </Card>
-
       {/* Defaults Section */}
       <Card>
           <CardHeader>

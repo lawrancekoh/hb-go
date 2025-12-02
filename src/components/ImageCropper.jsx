@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback } from 'react';
 import Cropper from 'react-easy-crop';
 import { Button } from './ui/Button';
 import { Check, X, RotateCw } from 'lucide-react';
@@ -105,33 +105,12 @@ export default function ImageCropper({ imageSrc, onCancel, onConfirm }) {
   const [rotation, setRotation] = useState(0);
   const [croppedAreaPixels, setCroppedAreaPixels] = useState(null);
   const [initialCroppedArea, setInitialCroppedArea] = useState(null);
-  const [isReady, setIsReady] = useState(false);
 
-  // Load image dimensions to set initial crop
-  useEffect(() => {
-    if (!imageSrc) return;
-
-    const img = new Image();
-    img.onload = () => {
-      const width = img.naturalWidth;
-      const height = img.naturalHeight;
-      const isPortrait = height > width;
-
-      // Default to full image
-      let initialCrop = { x: 0, y: 0, width, height };
-
-      // If Portrait, cover ~80% of vertical space (centered)
-      if (isPortrait) {
-        const cropHeight = height * 0.8;
-        const cropY = (height - cropHeight) / 2;
-        initialCrop = { x: 0, y: cropY, width, height: cropHeight };
-      }
-
-      setInitialCroppedArea(initialCrop);
-      setIsReady(true);
-    };
-    img.src = imageSrc;
-  }, [imageSrc]);
+  const onMediaLoaded = useCallback((mediaSize) => {
+    const { width, height } = mediaSize;
+    // Default to full image crop
+    setInitialCroppedArea({ x: 0, y: 0, width, height });
+  }, []);
 
   const onCropComplete = useCallback((croppedArea, croppedAreaPixels) => {
     setCroppedAreaPixels(croppedAreaPixels);
@@ -156,14 +135,6 @@ export default function ImageCropper({ imageSrc, onCancel, onConfirm }) {
     setRotation((prevRotation) => prevRotation + 90);
   };
 
-  if (!isReady) {
-    return (
-      <div className="fixed inset-0 z-50 bg-black flex items-center justify-center">
-        <div className="text-white">Loading...</div>
-      </div>
-    );
-  }
-
   return (
     <div className="fixed inset-0 z-50 bg-black flex flex-col">
       <div className="relative flex-1 bg-black">
@@ -178,6 +149,7 @@ export default function ImageCropper({ imageSrc, onCancel, onConfirm }) {
           onCropComplete={onCropComplete}
           onZoomChange={setZoom}
           onRotationChange={setRotation}
+          onMediaLoaded={onMediaLoaded}
           showGrid={true}
         />
       </div>
