@@ -94,6 +94,10 @@ export default function ImageCropper({ imageSrc, onCancel, onConfirm }) {
   const [scale, setScale] = useState(1);
   const imgRef = useRef(null);
 
+  // Pinch-to-zoom state
+  const touchStartDist = useRef(0);
+  const startScale = useRef(1);
+
   // Update currentImg if prop changes
   useEffect(() => {
     setCurrentImg(imageSrc);
@@ -120,7 +124,7 @@ export default function ImageCropper({ imageSrc, onCancel, onConfirm }) {
       makeAspectCrop(
         {
           unit: '%',
-          width: 80, // Default to 80% instead of 90%
+          width: 80, // Default to 80%
         },
         aspect,
         width,
@@ -155,6 +159,30 @@ export default function ImageCropper({ imageSrc, onCancel, onConfirm }) {
     }
   };
 
+  // Helper for pinch distance
+  const distance = (touch1, touch2) => {
+    return Math.hypot(touch1.clientX - touch2.clientX, touch1.clientY - touch2.clientY);
+  };
+
+  const handleTouchStart = (e) => {
+    if (e.touches.length === 2) {
+      touchStartDist.current = distance(e.touches[0], e.touches[1]);
+      startScale.current = scale;
+    }
+  };
+
+  const handleTouchMove = (e) => {
+    if (e.touches.length === 2) {
+      const dist = distance(e.touches[0], e.touches[1]);
+      if (touchStartDist.current > 0) {
+        const ratio = dist / touchStartDist.current;
+        // Clamp between 1.0 and 3.0
+        const newScale = Math.min(Math.max(startScale.current * ratio, 1.0), 3.0);
+        setScale(newScale);
+      }
+    }
+  };
+
   return (
     <div className="fixed inset-0 z-50 bg-black flex flex-col h-[100dvh]">
       {/* Header */}
@@ -163,24 +191,32 @@ export default function ImageCropper({ imageSrc, onCancel, onConfirm }) {
       </div>
 
       {/* Middle - Image Area */}
-      <div className="flex-1 overflow-auto flex items-center justify-center p-8 bg-neutral-900">
+      <div
+        className="flex-1 overflow-auto flex items-center justify-center p-8 bg-neutral-900 touch-pan-x touch-pan-y"
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+      >
         {currentImg && (
-            <div style={{ transform: `scale(${scale})`, transition: 'transform 0.1s' }}>
-                <ReactCrop
-                    crop={crop}
-                    onChange={(c) => setCrop(c)}
-                    onComplete={(c) => setCompletedCrop(c)}
-                >
-                    <img
-                        ref={imgRef}
-                        src={currentImg}
-                        onLoad={onImageLoad}
-                        className="max-h-[65vh] w-auto"
-                        style={{ display: 'block' }}
-                        alt="Receipt"
-                    />
-                </ReactCrop>
-            </div>
+            <ReactCrop
+                crop={crop}
+                onChange={(c) => setCrop(c)}
+                onComplete={(c) => setCompletedCrop(c)}
+                keepSelection={true}
+                style={{
+                    width: `${scale * 100}%`,
+                    transition: 'width 0.1s ease-out',
+                    flexShrink: 0
+                }}
+            >
+                <img
+                    ref={imgRef}
+                    src={currentImg}
+                    onLoad={onImageLoad}
+                    className="w-full h-auto"
+                    style={{ display: 'block' }}
+                    alt="Receipt"
+                />
+            </ReactCrop>
         )}
       </div>
 
@@ -191,7 +227,7 @@ export default function ImageCropper({ imageSrc, onCancel, onConfirm }) {
             <span className="text-xs text-gray-500 font-medium">Zoom</span>
             <input
               type="range"
-              min="0.5"
+              min="1.0"
               max="3.0"
               step="0.1"
               value={scale}
