@@ -9,7 +9,12 @@ import { Label } from '../components/ui/Label';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '../components/ui/Card';
 
 function Settings() {
-  const [settings, setSettings] = useState({ defaultTag: '', ocrProvider: 'auto' });
+  const [settings, setSettings] = useState({
+      defaultTag: '',
+      ocrProvider: 'auto',
+      theme: localStorage.getItem('hb_theme') || 'system',
+      defaultCategory: localStorage.getItem('hb_default_category') || ''
+  });
   const [cache, setCache] = useState({ categories: [], payees: [] });
   const [importStatus, setImportStatus] = useState('');
 
@@ -79,9 +84,22 @@ function Settings() {
 
   const handleSettingChange = async (e) => {
     const { name, value } = e.target;
-    const newSettings = { ...settings, [name]: value };
-    setSettings(newSettings);
-    await storageService.saveSettings(newSettings);
+
+    // Special handling for Theme
+    if (name === 'theme') {
+        localStorage.setItem('hb_theme', value);
+        window.dispatchEvent(new Event('hb_theme_changed'));
+    }
+    // Special handling for Default Category
+    else if (name === 'defaultCategory') {
+        localStorage.setItem('hb_default_category', value);
+    }
+    // Standard Settings
+    else {
+        await storageService.saveSettings({ ...settings, [name]: value });
+    }
+
+    setSettings(prev => ({ ...prev, [name]: value }));
   };
 
   // AI Configuration Handlers
@@ -271,13 +289,50 @@ function Settings() {
           <CardHeader>
               <CardTitle className="flex items-center gap-2 dark:text-slate-100">
                   <Tag className="h-5 w-5 text-brand-600 dark:text-brand-400" />
-                  Defaults
+                  App & Defaults
               </CardTitle>
               <CardDescription className="dark:text-slate-400">
-                  Configure default values for new transactions.
+                  Configure appearance and default values.
               </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
+               {/* Theme Selector */}
+               <div className="space-y-2">
+                   <Label className="dark:text-slate-200">App Theme</Label>
+                   <select
+                      name="theme"
+                      value={settings.theme}
+                      onChange={handleSettingChange}
+                      className="w-full h-10 px-3 rounded-md border border-slate-300 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-slate-950 dark:border-slate-800 dark:text-slate-100"
+                   >
+                      <option value="system">System Default</option>
+                      <option value="light">Light Mode</option>
+                      <option value="dark">Dark Mode</option>
+                   </select>
+               </div>
+
+               {/* Default Category */}
+               <div className="space-y-2">
+                   <Label className="dark:text-slate-200">Default Category</Label>
+                   <div className="relative">
+                        <Input
+                            type="text"
+                            name="defaultCategory"
+                            value={settings.defaultCategory}
+                            onChange={handleSettingChange}
+                            list="settings-category-list"
+                            placeholder="Select default category"
+                            className="dark:text-slate-100"
+                        />
+                        <datalist id="settings-category-list">
+                            {cache.categories && cache.categories.map(cat => (
+                                <option key={cat} value={cat} />
+                            ))}
+                        </datalist>
+                   </div>
+                   <p className="text-xs text-slate-500 dark:text-slate-400">Used for new transactions and as a fallback for AI scans.</p>
+               </div>
+
                <div className="space-y-2">
                   <Label className="dark:text-slate-200">Default Tag</Label>
                   <Input

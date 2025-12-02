@@ -28,6 +28,46 @@ function App() {
     setShowOnboarding(false);
   };
 
+  // Theme Logic
+  useEffect(() => {
+    const applyTheme = () => {
+      const theme = localStorage.getItem('hb_theme') || 'system';
+      const root = window.document.documentElement;
+
+      root.classList.remove('light', 'dark');
+
+      if (theme === 'system') {
+        const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        root.classList.add(systemTheme);
+      } else {
+        root.classList.add(theme);
+      }
+    };
+
+    // Apply on mount
+    applyTheme();
+
+    // Listen for system changes if system mode
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    const handleSystemChange = () => {
+       if (localStorage.getItem('hb_theme') === 'system') {
+           applyTheme();
+       }
+    };
+    mediaQuery.addEventListener('change', handleSystemChange);
+
+    // Listen for manual changes via custom event
+    const handleManualChange = () => {
+        applyTheme();
+    };
+    window.addEventListener('hb_theme_changed', handleManualChange);
+
+    return () => {
+        mediaQuery.removeEventListener('change', handleSystemChange);
+        window.removeEventListener('hb_theme_changed', handleManualChange);
+    };
+  }, []);
+
   return (
     <Layout>
       {showOnboarding && <Onboarding onComplete={handleOnboardingComplete} />}
