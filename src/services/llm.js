@@ -97,6 +97,8 @@ export const llmService = {
       reader.readAsDataURL(imageFile);
     });
 
+    const dateFormat = localStorage.getItem('hb_date_format') || 'DD/MM/YYYY';
+
     const SYSTEM_PROMPT = `Analyze this image. It is either a receipt or a general object/item. Return ONLY a strict JSON object (no markdown, no backticks).
 
     1. If it is a RECEIPT:
@@ -105,6 +107,7 @@ export const llmService = {
        - payment_method: string (e.g. Visa, Cash, Amex).
        - items_summary: string, max 5 words summary of items.
        - is_receipt: true.
+       - IMPORTANT: Assume the date on the receipt follows the **${dateFormat}** format. (e.g., if format is DD/MM, 10/01 is January 10th).
 
     2. If it is an OBJECT (no receipt text found):
        - merchant: Guess based on brand/logo or object type (e.g., "Starbucks", "Vending Machine", "Taxi", "Apple").
