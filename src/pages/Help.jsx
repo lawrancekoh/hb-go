@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { Card, CardHeader, CardTitle, CardContent } from '../components/ui/Card';
-import { ArrowLeft, BookOpen, Upload, Camera, Download, Smartphone, ShieldCheck } from 'lucide-react';
+import { ArrowLeft, BookOpen, Upload, Camera, Download, Smartphone, ShieldCheck, Sparkles } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 
 function Help() {
@@ -14,6 +14,31 @@ function Help() {
       </div>
 
       <div className="grid gap-6">
+        <Card>
+            <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                    <Sparkles className="h-5 w-5 text-brand-600" />
+                    Pro Tips
+                </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3 text-slate-600">
+                <ul className="list-disc list-inside space-y-2">
+                    <li>
+                        <strong>AI Setup:</strong> Go to Settings to add an OpenAI/Gemini key for super-accurate scanning.
+                    </li>
+                    <li>
+                        <strong>Cropping:</strong> Crop your image tightly around the text to remove table backgrounds and improve results.
+                    </li>
+                    <li>
+                        <strong>Tagging:</strong> Search <code>tag:mobile-import</code> in HomeBank to find transactions added via this app.
+                    </li>
+                    <li>
+                        <strong>Automation:</strong> Set up 'Assignments' in HomeBank Desktop to automate categories based on Payee names.
+                    </li>
+                </ul>
+            </CardContent>
+        </Card>
+
         <Card>
             <CardHeader>
                 <CardTitle className="flex items-center gap-2">
