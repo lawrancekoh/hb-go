@@ -109,14 +109,19 @@ export default function ImageCropper({ imageSrc, onCancel, onConfirm }) {
 
   // Initialize crop on load
   function onImageLoad(e) {
-    const { width, height } = e.currentTarget;
+    const { width, height, naturalWidth, naturalHeight } = e.currentTarget;
+
+    // Calculate aspect ratio from natural dimensions to ensure the initial crop
+    // matches the image's aspect ratio (covering 90% of the image).
+    const aspect = naturalWidth / naturalHeight;
+
     const initialCrop = centerCrop(
       makeAspectCrop(
         {
           unit: '%',
           width: 90,
         },
-        undefined,
+        aspect,
         width,
         height
       ),
@@ -150,7 +155,13 @@ export default function ImageCropper({ imageSrc, onCancel, onConfirm }) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-black flex flex-col h-screen">
+    <div className="fixed inset-0 z-50 bg-black flex flex-col h-[100dvh]">
+      {/* Header */}
+      <div className="text-white p-4 font-semibold text-center shrink-0">
+        Crop Receipt
+      </div>
+
+      {/* Middle - Image Area */}
       <div className="flex-1 overflow-auto flex items-center justify-center p-4">
         {currentImg && (
             <ReactCrop
@@ -162,13 +173,15 @@ export default function ImageCropper({ imageSrc, onCancel, onConfirm }) {
                     ref={imgRef}
                     src={currentImg}
                     onLoad={onImageLoad}
-                    style={{ maxHeight: '70vh', maxWidth: '100%', display: 'block' }}
+                    className="max-h-[65vh] w-auto"
+                    style={{ display: 'block' }}
                     alt="Receipt"
                 />
             </ReactCrop>
         )}
       </div>
 
+      {/* Footer */}
       <div className="bg-white p-4 pb-safe flex gap-4 shrink-0 shadow-up z-10">
           <Button variant="outline" className="flex-1 gap-2" onClick={onCancel}>
             <X className="h-4 w-4" /> Cancel
