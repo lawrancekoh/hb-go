@@ -145,13 +145,13 @@ function Settings() {
       </div>
 
       {/* AI Configuration (Experimental) */}
-      <Card className="border-indigo-100 bg-indigo-50/30 dark:bg-indigo-950/20 dark:border-indigo-900">
+      <Card className="border-brand-100 bg-brand-50/30 dark:bg-brand-950/20 dark:border-brand-900">
           <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-indigo-900 dark:text-indigo-300">
-                  <Sparkles className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
+              <CardTitle className="flex items-center gap-2 text-brand-900 dark:text-brand-300">
+                  <Sparkles className="h-5 w-5 text-brand-600 dark:text-brand-400" />
                   AI Configuration (Experimental)
               </CardTitle>
-              <CardDescription className="dark:text-indigo-200/70">
+              <CardDescription className="dark:text-brand-200/70">
                   Connect your own API key to use advanced AI for receipt scanning.
               </CardDescription>
           </CardHeader>
@@ -162,7 +162,7 @@ function Settings() {
                       name="provider"
                       value={aiConfig.provider}
                       onChange={handleAiConfigChange}
-                      className="w-full h-10 px-3 rounded-md border border-slate-300 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-slate-950 dark:border-slate-800 dark:text-slate-100"
+                      className="w-full h-10 px-3 rounded-md border border-slate-300 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 dark:bg-slate-950 dark:border-slate-800 dark:text-slate-100"
                   >
                       <option value="openai">OpenAI</option>
                       <option value="gemini">Google Gemini</option>
@@ -222,7 +222,7 @@ function Settings() {
                           name="model"
                           value={aiConfig.model}
                           onChange={handleAiConfigChange}
-                          className="w-full h-10 px-3 rounded-md border border-slate-300 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-slate-950 dark:border-slate-800 dark:text-slate-100"
+                          className="w-full h-10 px-3 rounded-md border border-slate-300 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 dark:bg-slate-950 dark:border-slate-800 dark:text-slate-100"
                       >
                           {aiConfig.models.map(m => (
                               <option key={m} value={m}>{m}</option>
@@ -238,7 +238,7 @@ function Settings() {
                   </div>
               )}
 
-              <Button onClick={saveAiConfig} className="w-full gap-2 bg-indigo-600 hover:bg-indigo-700 text-white dark:bg-indigo-700 dark:hover:bg-indigo-600">
+              <Button onClick={saveAiConfig} className="w-full gap-2 bg-brand-600 hover:bg-brand-700 text-white dark:bg-brand-700 dark:hover:bg-brand-600">
                   <Save className="h-4 w-4" /> Save AI Configuration
               </Button>
           </CardContent>
@@ -303,7 +303,7 @@ function Settings() {
                       name="theme"
                       value={settings.theme}
                       onChange={handleSettingChange}
-                      className="w-full h-10 px-3 rounded-md border border-slate-300 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-slate-950 dark:border-slate-800 dark:text-slate-100"
+                      className="w-full h-10 px-3 rounded-md border border-slate-300 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 dark:bg-slate-950 dark:border-slate-800 dark:text-slate-100"
                    >
                       <option value="system">System Default</option>
                       <option value="light">Light Mode</option>
@@ -359,7 +359,7 @@ function Settings() {
                           // Force re-render (hacky but works for simple local storage)
                           setSettings({ ...settings });
                       }}
-                      className="w-full h-10 px-3 rounded-md border border-slate-300 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-slate-950 dark:border-slate-800 dark:text-slate-100"
+                      className="w-full h-10 px-3 rounded-md border border-slate-300 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 dark:bg-slate-950 dark:border-slate-800 dark:text-slate-100"
                   >
                       <option value="DD/MM/YYYY">DD/MM/YYYY (International/UK/SG)</option>
                       <option value="MM/DD/YYYY">MM/DD/YYYY (US)</option>

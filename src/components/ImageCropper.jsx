@@ -233,7 +233,7 @@ export default function ImageCropper({ imageSrc, onCancel, onConfirm }) {
               step="0.1"
               value={scale}
               onChange={(e) => setScale(parseFloat(e.target.value))}
-              className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-indigo-600"
+              className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-brand-600"
             />
           </div>
 
