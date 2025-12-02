@@ -1,46 +1,54 @@
 from playwright.sync_api import sync_playwright
 
-def verify_changes():
+def verify_features():
     with sync_playwright() as p:
         browser = p.chromium.launch(headless=True)
-        context = browser.new_context()
+        # Emulate dark mode
+        context = browser.new_context(color_scheme='dark')
         page = context.new_page()
 
-        # Navigate to the app (using HashRouter format)
+        # 1. Verify Home Page in Dark Mode
+        print("Navigating to Home Page...")
         page.goto("http://localhost:5173/hb-go/")
+        # Wait for content to load
+        page.wait_for_selector('text=HB Go')
 
-        # Bypass Onboarding
+        # Bypass onboarding if needed (though not implemented in previous tasks, it's mentioned in memory)
         page.evaluate("localStorage.setItem('hb_has_onboarded', 'true')")
-        # Ensure we are in a state where AI config is loaded for the Editor check
-        page.evaluate("localStorage.setItem('hb_ai_config', '{\"provider\": \"openai\", \"apiKey\": \"dummy\", \"models\": [\"gpt-4o\"]}')")
         page.reload()
+        page.wait_for_selector('text=HB Go')
 
-        # 1. Verify Editor Empty State
-        # Navigate to Editor
-        page.goto("http://localhost:5173/hb-go/#/editor/new")
+        print("Taking screenshot of Home Page (Dark Mode)...")
+        page.screenshot(path="verification/home_dark.png")
 
-        try:
-            # We look for the text that appears when aiConfig is present
-            page.wait_for_selector("text=Scan a receipt, or snap a photo of the item!", timeout=5000)
-            page.screenshot(path="verification/editor_empty_state.png")
-            print("Verified Editor empty state")
-        except Exception as e:
-            print(f"Failed to find editor text: {e}")
-            page.screenshot(path="verification/editor_failure.png")
+        # 2. Verify Settings Page in Dark Mode and Date Format
+        print("Navigating to Settings Page...")
+        # Use more robust locator
+        page.click('text=Settings')
+        page.wait_for_selector('text=Settings')
 
-        # 2. Verify Settings Help Text
-        page.goto("http://localhost:5173/hb-go/#/settings")
+        # Check if Date Format selector is present
+        print("Checking for Date Format selector...")
+        if page.is_visible('select[name="dateFormat"]'):
+            print("Date Format selector found.")
+        else:
+            print("Date Format selector NOT found.")
 
-        try:
-            # Check for help text
-            page.wait_for_selector("text=Vision (Multi-modal)", timeout=5000)
-            page.screenshot(path="verification/settings_help_text.png")
-            print("Verified Settings help text")
-        except Exception as e:
-            print(f"Failed to find settings text: {e}")
-            page.screenshot(path="verification/settings_failure.png")
+        print("Taking screenshot of Settings Page (Dark Mode)...")
+        page.screenshot(path="verification/settings_dark.png")
+
+        # 3. Verify Editor Page in Dark Mode
+        print("Navigating to Editor Page (New)...")
+        # Go back to home then click new
+        page.goto("http://localhost:5173/hb-go/")
+        page.wait_for_selector('text=New Transaction', state='visible')
+        page.click('text=New Transaction')
+        page.wait_for_selector('input[name="date"]')
+
+        print("Taking screenshot of Editor Page (Dark Mode)...")
+        page.screenshot(path="verification/editor_dark.png")
 
         browser.close()
 
 if __name__ == "__main__":
-    verify_changes()
+    verify_features()

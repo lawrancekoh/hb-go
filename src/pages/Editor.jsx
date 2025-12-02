@@ -319,15 +319,15 @@ function Editor() {
         <Button variant="ghost" size="icon" onClick={() => navigate('/')}>
             <ArrowLeft className="h-5 w-5" />
         </Button>
-        <h1 className="text-xl font-bold text-slate-900">{id === 'new' ? 'New Transaction' : 'Edit Transaction'}</h1>
+        <h1 className="text-xl font-bold text-slate-900 dark:text-slate-100">{id === 'new' ? 'New Transaction' : 'Edit Transaction'}</h1>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Left Column: Image / Capture */}
           <div className="flex flex-col gap-4">
               <div className={cn(
-                  "relative aspect-[3/4] md:aspect-[4/5] bg-slate-100 rounded-lg border-2 border-dashed border-slate-300 flex flex-col items-center justify-center overflow-hidden transition-colors hover:bg-slate-50",
-                  previewUrl ? "border-solid border-slate-200 bg-slate-900" : ""
+                  "relative aspect-[3/4] md:aspect-[4/5] bg-slate-100 rounded-lg border-2 border-dashed border-slate-300 flex flex-col items-center justify-center overflow-hidden transition-colors hover:bg-slate-50 dark:bg-slate-800 dark:border-slate-700 dark:hover:bg-slate-800/80",
+                  previewUrl ? "border-solid border-slate-200 bg-slate-900 dark:border-slate-800" : ""
               )}>
                   {previewUrl ? (
                       <>
@@ -350,18 +350,18 @@ function Editor() {
                                </div>
                            )}
 
-                           <div className="bg-white p-4 rounded-full shadow-sm inline-flex mb-4 relative">
-                                <Camera className="h-8 w-8 text-brand-600" />
+                           <div className="bg-white p-4 rounded-full shadow-sm inline-flex mb-4 relative dark:bg-slate-700">
+                                <Camera className="h-8 w-8 text-brand-600 dark:text-brand-400" />
                                 {aiConfig && (
-                                    <div className="absolute -top-1 -right-1 bg-indigo-600 text-white rounded-full p-1 border-2 border-white">
+                                    <div className="absolute -top-1 -right-1 bg-indigo-600 text-white rounded-full p-1 border-2 border-white dark:border-slate-700">
                                         <Sparkles className="h-3 w-3" />
                                     </div>
                                 )}
                            </div>
-                           <p className="font-medium text-slate-900">
+                           <p className="font-medium text-slate-900 dark:text-slate-100">
                                {aiConfig ? "Scan a receipt, or snap a photo of the item!" : "Tap to Scan Receipt"}
                            </p>
-                           <p className="text-xs text-slate-500 mt-1">Supports Image & PDF</p>
+                           <p className="text-xs text-slate-500 mt-1 dark:text-slate-400">Supports Image & PDF</p>
                       </div>
                   )}
 
@@ -377,9 +377,9 @@ function Editor() {
 
                   {/* Processing Overlay */}
                   {isProcessing && (
-                      <div className="absolute inset-0 bg-white/90 flex flex-col items-center justify-center z-10">
-                          <Loader2 className="h-8 w-8 text-brand-600 animate-spin mb-2" />
-                          <p className="text-sm font-semibold text-brand-700">{ocrStatus}</p>
+                      <div className="absolute inset-0 bg-white/90 flex flex-col items-center justify-center z-10 dark:bg-slate-900/90">
+                          <Loader2 className="h-8 w-8 text-brand-600 animate-spin mb-2 dark:text-brand-400" />
+                          <p className="text-sm font-semibold text-brand-700 dark:text-brand-400">{ocrStatus}</p>
                       </div>
                   )}
               </div>
@@ -387,7 +387,7 @@ function Editor() {
 
                {/* Mobile: Show OCR status below image if not processing but recently finished */}
                {!isProcessing && ocrStatus && (
-                  <div className="text-xs text-center text-emerald-600 font-medium bg-emerald-50 py-1 rounded">
+                  <div className="text-xs text-center text-emerald-600 font-medium bg-emerald-50 py-1 rounded dark:bg-emerald-900/30 dark:text-emerald-400">
                       OCR: {ocrStatus}
                   </div>
                )}
@@ -397,28 +397,30 @@ function Editor() {
           <form onSubmit={handleSubmit} className="flex flex-col gap-5">
               <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                      <Label>Date</Label>
+                      <Label className="dark:text-slate-200">Date</Label>
                       <Input
                         type="date"
                         name="date"
                         value={formData.date}
                         onChange={handleChange}
                         required
+                        className="dark:text-slate-100" // Ensure text is visible
                       />
                   </div>
                   <div className="space-y-2">
-                      <Label>Time</Label>
+                      <Label className="dark:text-slate-200">Time</Label>
                       <Input
                         type="time"
                         name="time"
                         value={formData.time}
                         onChange={handleChange}
+                        className="dark:text-slate-100"
                       />
                   </div>
               </div>
 
               <div className="space-y-2">
-                  <Label>Payee</Label>
+                  <Label className="dark:text-slate-200">Payee</Label>
                   <Input
                     type="text"
                     name="payee"
@@ -428,6 +430,7 @@ function Editor() {
                     placeholder="Merchant Name"
                     required
                     autoComplete="off"
+                    className="dark:text-slate-100"
                   />
                   <datalist id="payee-list">
                       {payees.map(p => <option key={p} value={p} />)}
@@ -435,7 +438,7 @@ function Editor() {
               </div>
 
               <div className="space-y-2">
-                  <Label>Amount</Label>
+                  <Label className="dark:text-slate-200">Amount</Label>
 
                   {/* Transaction Type Toggle */}
                   <div className="grid grid-cols-2 gap-3 mb-2">
@@ -445,8 +448,8 @@ function Editor() {
                         className={cn(
                             "flex items-center justify-center py-2 px-4 rounded-lg text-sm font-semibold transition-all border shadow-sm",
                             transactionType === 'expense'
-                                ? "bg-red-50 border-red-200 text-red-700 ring-1 ring-red-200"
-                                : "bg-white border-slate-200 text-slate-600 hover:bg-slate-50 hover:border-slate-300"
+                                ? "bg-red-50 border-red-200 text-red-700 ring-1 ring-red-200 dark:bg-red-900/30 dark:border-red-800 dark:text-red-400 dark:ring-red-800"
+                                : "bg-white border-slate-200 text-slate-600 hover:bg-slate-50 hover:border-slate-300 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-400 dark:hover:bg-slate-700"
                         )}
                       >
                         Expense
@@ -457,8 +460,8 @@ function Editor() {
                         className={cn(
                             "flex items-center justify-center py-2 px-4 rounded-lg text-sm font-semibold transition-all border shadow-sm",
                             transactionType === 'income'
-                                ? "bg-emerald-50 border-emerald-200 text-emerald-700 ring-1 ring-emerald-200"
-                                : "bg-white border-slate-200 text-slate-600 hover:bg-slate-50 hover:border-slate-300"
+                                ? "bg-emerald-50 border-emerald-200 text-emerald-700 ring-1 ring-emerald-200 dark:bg-emerald-900/30 dark:border-emerald-800 dark:text-emerald-400 dark:ring-emerald-800"
+                                : "bg-white border-slate-200 text-slate-600 hover:bg-slate-50 hover:border-slate-300 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-400 dark:hover:bg-slate-700"
                         )}
                       >
                         Income
@@ -466,7 +469,7 @@ function Editor() {
                   </div>
 
                   <div className="relative">
-                      <span className="absolute left-3 top-2.5 text-slate-500 text-sm">$</span>
+                      <span className="absolute left-3 top-2.5 text-slate-500 text-sm dark:text-slate-400">$</span>
                       <Input
                         ref={amountInputRef}
                         type="number"
@@ -477,7 +480,7 @@ function Editor() {
                         onChange={handleChange}
                         className={cn(
                             "pl-7 font-mono font-medium",
-                            transactionType === 'expense' ? "text-red-600" : "text-emerald-600"
+                            transactionType === 'expense' ? "text-red-600 dark:text-red-400" : "text-emerald-600 dark:text-emerald-400"
                         )}
                         placeholder="0.00"
                         required
@@ -486,7 +489,7 @@ function Editor() {
               </div>
 
               <div className="space-y-2">
-                  <Label>Category</Label>
+                  <Label className="dark:text-slate-200">Category</Label>
                   <Input
                     type="text"
                     name="category"
@@ -495,6 +498,7 @@ function Editor() {
                     list="category-list"
                     placeholder="Select or Type Category"
                     autoComplete="off"
+                    className="dark:text-slate-100"
                   />
                   <datalist id="category-list">
                     {categories.map(cat => (
@@ -504,28 +508,30 @@ function Editor() {
               </div>
 
               <div className="space-y-2">
-                  <Label>Tags</Label>
+                  <Label className="dark:text-slate-200">Tags</Label>
                   <Input
                     type="text"
                     name="tags"
                     value={formData.tags}
                     onChange={handleChange}
                     placeholder="Space separated tags"
+                    className="dark:text-slate-100"
                   />
               </div>
 
               <div className="space-y-2">
-                  <Label>Memo</Label>
+                  <Label className="dark:text-slate-200">Memo</Label>
                   <Input
                     type="text"
                     name="memo"
                     value={formData.memo}
                     onChange={handleChange}
                     placeholder="Notes"
+                    className="dark:text-slate-100"
                   />
               </div>
 
-              <div className="pt-4 sticky bottom-0 bg-white md:static p-4 md:p-0 -mx-4 md:mx-0 border-t md:border-0 shadow-lg md:shadow-none flex gap-3">
+              <div className="pt-4 sticky bottom-0 bg-white md:static p-4 md:p-0 -mx-4 md:mx-0 border-t md:border-0 shadow-lg md:shadow-none flex gap-3 dark:bg-slate-900 dark:border-slate-800">
                   <Button type="button" variant="outline" className="flex-1" onClick={() => navigate('/')}>
                       Cancel
                   </Button>

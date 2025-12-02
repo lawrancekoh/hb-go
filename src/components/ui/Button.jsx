@@ -3,12 +3,12 @@ import { cn } from '../../lib/utils';
 import { Link } from 'react-router-dom';
 
 const buttonVariants = {
-  default: 'bg-brand-600 text-white hover:bg-brand-700 shadow-sm',
-  destructive: 'bg-red-600 text-white hover:bg-red-700 shadow-sm',
-  outline: 'border border-slate-300 bg-white text-slate-700 hover:bg-slate-50',
-  secondary: 'bg-slate-100 text-slate-900 hover:bg-slate-200',
-  ghost: 'hover:bg-slate-100 hover:text-slate-900',
-  link: 'text-brand-600 underline-offset-4 hover:underline',
+  default: 'bg-brand-600 text-white hover:bg-brand-700 shadow-sm dark:bg-brand-500 dark:text-slate-50 dark:hover:bg-brand-500/90',
+  destructive: 'bg-red-600 text-white hover:bg-red-700 shadow-sm dark:bg-red-900 dark:text-slate-50 dark:hover:bg-red-900/90',
+  outline: 'border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:hover:bg-slate-800',
+  secondary: 'bg-slate-100 text-slate-900 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-50 dark:hover:bg-slate-800/80',
+  ghost: 'hover:bg-slate-100 hover:text-slate-900 dark:hover:bg-slate-800 dark:hover:text-slate-50',
+  link: 'text-brand-600 underline-offset-4 hover:underline dark:text-slate-50',
 };
 
 const buttonSizes = {

@@ -46,6 +46,7 @@
     - [ ] Improve Image Cropper Mobile Layout & Default Crop <!-- id: 47 -->
     - [ ] Implement Onboarding Wizard <!-- id: 45 -->
     - [ ] Cleanup Settings Page (Remove OCR options) <!-- id: 46 -->
+    - [ ] Implement Date Format Preference <!-- id: 49 -->
 - [ ] Phase 7: Documentation & Final Touches <!-- id: 37 -->
     - [ ] Update README with readiness status, HomeBank link, and credits <!-- id: 38 -->
     - [ ] Add Persistent Footer with donation message and HomeBank link <!-- id: 39 -->
