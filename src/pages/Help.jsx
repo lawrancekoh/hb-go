@@ -42,6 +42,9 @@ function Help() {
 
                 <div>
                     <h3 className="font-semibold text-slate-900 dark:text-white mb-2">Desktop Workflow</h3>
+                    <p className="text-sm mb-3">
+                        Don't have the desktop app? <a href="http://homebank.free.fr/" target="_blank" rel="noreferrer" className="text-brand-600 dark:text-brand-400 font-medium hover:underline">Download HomeBank</a>.
+                    </p>
                     <ul className="list-disc list-inside space-y-2">
                         <li>
                             <strong>Chronological Order:</strong> We save the time <code>[HH:MM]</code> to the Memo. In HomeBank, sort by the Memo column to see your day's spending in exact order.

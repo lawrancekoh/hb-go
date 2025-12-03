@@ -396,6 +396,10 @@ function Settings() {
           <p className="text-xs text-gray-500">v{__APP_VERSION__} • Offline PWA</p>
         </div>
 
+        <div className="text-xs text-gray-500">
+           Unofficial companion to <a href="http://homebank.free.fr/" target="_blank" rel="noreferrer" className="text-blue-500 hover:underline">HomeBank</a>.
+        </div>
+
         {/* Developer Credits */}
         <div className="text-xs text-gray-400">
           <p>Developed by Lawrance Koh © {new Date().getFullYear()}</p>
