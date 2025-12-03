@@ -10,7 +10,7 @@ function Help() {
         <Button variant="ghost" size="icon" href="/" aria-label="Back to Home">
             <ArrowLeft className="h-5 w-5" />
         </Button>
-        <h1 className="text-2xl font-bold text-slate-900">How to Use</h1>
+        <h1 className="text-2xl font-bold text-slate-900 dark:text-white">How to Use</h1>
       </div>
 
       <div className="grid gap-6">
@@ -21,9 +21,9 @@ function Help() {
                     Pro Tips
                 </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-6 text-slate-600">
+            <CardContent className="space-y-6 text-slate-600 dark:text-gray-300">
                 <div>
-                    <h3 className="font-semibold text-slate-900 mb-2">App Features</h3>
+                    <h3 className="font-semibold text-slate-900 dark:text-white mb-2">App Features</h3>
                     <ul className="list-disc list-inside space-y-2">
                         <li>
                             <strong>AI Setup:</strong> Go to Settings to add an OpenAI/Gemini key for super-accurate scanning.
@@ -41,7 +41,7 @@ function Help() {
                 </div>
 
                 <div>
-                    <h3 className="font-semibold text-slate-900 mb-2">Desktop Workflow</h3>
+                    <h3 className="font-semibold text-slate-900 dark:text-white mb-2">Desktop Workflow</h3>
                     <ul className="list-disc list-inside space-y-2">
                         <li>
                             <strong>Chronological Order:</strong> We save the time <code>[HH:MM]</code> to the Memo. In HomeBank, sort by the Memo column to see your day's spending in exact order.
@@ -67,9 +67,9 @@ function Help() {
                     1. Setup
                 </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-2 text-slate-600">
+            <CardContent className="space-y-2 text-slate-600 dark:text-gray-300">
                 <p>
-                    Go to <Link to="/settings" className="text-brand-600 font-medium hover:underline">Settings</Link>.
+                    Go to <Link to="/settings" className="text-brand-600 dark:text-brand-400 font-medium hover:underline">Settings</Link>.
                 </p>
                 <p>
                     Import your HomeBank file (<code>.xhb</code>) to load your existing categories and payees. This makes entry much faster!
@@ -84,7 +84,7 @@ function Help() {
                     2. Capture
                 </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-2 text-slate-600">
+            <CardContent className="space-y-2 text-slate-600 dark:text-gray-300">
                 <p>
                     Tap the <strong>+</strong> button on the home screen.
                 </p>
@@ -101,7 +101,7 @@ function Help() {
                     3. Export
                 </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-2 text-slate-600">
+            <CardContent className="space-y-2 text-slate-600 dark:text-gray-300">
                 <p>
                     When you are ready, tap <strong>Export CSV</strong> on the home screen.
                 </p>
@@ -118,9 +118,9 @@ function Help() {
                     Installation
                 </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4 text-slate-600">
+            <CardContent className="space-y-4 text-slate-600 dark:text-gray-300">
                 <div>
-                  <h3 className="font-semibold text-slate-900 mb-1">iOS (Safari)</h3>
+                  <h3 className="font-semibold text-slate-900 dark:text-white mb-1">iOS (Safari)</h3>
                   <ol className="list-decimal list-inside space-y-1 pl-1">
                     <li>Open app in Safari</li>
                     <li>Tap <strong>Share</strong> (box with arrow)</li>
@@ -128,7 +128,7 @@ function Help() {
                   </ol>
                 </div>
                 <div>
-                  <h3 className="font-semibold text-slate-900 mb-1">Android (Chrome)</h3>
+                  <h3 className="font-semibold text-slate-900 dark:text-white mb-1">Android (Chrome)</h3>
                   <ol className="list-decimal list-inside space-y-1 pl-1">
                     <li>Open app in Chrome</li>
                     <li>Tap <strong>Menu</strong> (three dots)</li>
@@ -145,7 +145,7 @@ function Help() {
                     Privacy
                 </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-2 text-slate-600">
+            <CardContent className="space-y-2 text-slate-600 dark:text-gray-300">
                 <p>
                     <strong>Your data stays on your device.</strong>
                 </p>
