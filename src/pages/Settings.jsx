@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { storageService } from '../services/storage';
 import { xhbParser } from '../services/xhbParser';
 import { llmService } from '../services/llm';
@@ -185,7 +186,12 @@ function Settings() {
               )}
 
               <div className="space-y-2">
-                  <Label className="dark:text-slate-200">API Key</Label>
+                  <div className="flex justify-between items-center">
+                    <Label className="dark:text-slate-200">API Key</Label>
+                    <Link to="/help" className="text-xs text-blue-500 hover:underline cursor-pointer">
+                        Guide: Get a Key
+                    </Link>
+                  </div>
                   <div className="flex gap-2">
                       <Input
                           type="password"
