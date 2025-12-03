@@ -5,6 +5,7 @@ import { ocrService } from '../services/ocr';
 import { formatMemo } from '../services/ocrUtils';
 import { llmService } from '../services/llm';
 import { matchingService } from '../services/matching';
+import { getToday, getCurrentTime, validateDate, validateTime } from '../services/dateUtils';
 import { ArrowLeft, Save, Loader2, Camera, Upload, X, Sparkles } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
@@ -19,8 +20,8 @@ function Editor() {
 
   // State
   const [formData, setFormData] = useState({
-    date: new Date().toISOString().split('T')[0],
-    time: new Date().toTimeString().split(' ')[0].substring(0, 5),
+    date: getToday(),
+    time: getCurrentTime(),
     payee: '',
     amount: '',
     category: '',
@@ -149,10 +150,14 @@ function Editor() {
               }
           }
 
+          // Validate Date/Time
+          const validDate = validateDate(result.date);
+          const validTime = validateTime(result.time);
+
           setFormData(prev => ({
               ...prev,
-              date: result.date || prev.date,
-              time: result.time || prev.time,
+              date: validDate || getToday(),
+              time: validTime || getCurrentTime(),
               payee: bestPayee || prev.payee,
               amount: displayAmount !== undefined ? displayAmount : prev.amount,
               category: bestCategory || prev.category,
@@ -270,12 +275,16 @@ function Editor() {
                   parsedAmount = Math.abs(val).toString();
               }
 
+              // Validate Date/Time
+              const validDate = validateDate(parsed.date);
+              const validTime = validateTime(parsed.time);
+
               setFormData(prev => ({
                   ...prev,
-                  date: parsed.date || prev.date,
+                  date: validDate || getToday(),
+                  time: validTime || getCurrentTime(),
                   payee: bestPayee || prev.payee,
                   amount: parsedAmount || prev.amount,
-                  time: parsed.time || prev.time,
                   memo: formattedMemo || prev.memo
               }));
 

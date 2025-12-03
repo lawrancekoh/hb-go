@@ -17,6 +17,7 @@
     "idb": "^8.0.3",
     "lucide-react": "^0.555.0",
     "pdfjs-dist": "^5.4.449",
+    "playwright": "^1.57.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "react-image-crop": "^11.0.10",
