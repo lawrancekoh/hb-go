@@ -158,6 +158,31 @@ function Help() {
             </CardContent>
         </Card>
       </div>
+
+      <div className="mt-8 pt-6 border-t border-gray-100 dark:border-gray-800">
+        <h3 className="text-md font-semibold text-slate-900 dark:text-white mb-2">
+            Still need help?
+        </h3>
+        <p className="text-sm text-slate-600 dark:text-gray-400 mb-4">
+            Found a bug or have a feature request? Check out our GitHub or send an email.
+        </p>
+        <div className="flex gap-4">
+            <a
+                href="https://github.com/lawrancekoh/hb-go/issues"
+                target="_blank"
+                rel="noreferrer"
+                className="text-sm font-medium text-emerald-500 hover:text-emerald-600"
+            >
+                Report a Bug →
+            </a>
+            <a
+                href="mailto:lawrancekoh@outlook.com"
+                className="text-sm font-medium text-blue-500 hover:text-blue-600"
+            >
+                Email Developer →
+            </a>
+        </div>
+      </div>
     </div>
   );
 }
