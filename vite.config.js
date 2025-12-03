@@ -11,20 +11,15 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.svg', 'robots.txt', 'icons/*.png'],
-      workbox: {
-        maximumFileSizeToCacheInBytes: 5000000, // 5MB to accommodate PaddleOCR
-      },
+      includeAssets: ['favicon.png', 'robots.txt', 'icons/*.png'],
       manifest: {
         name: 'HB Go',
         short_name: 'HB Go',
-        description: 'Scan. Tag. Export.',
-        theme_color: '#2563EB',
+        description: 'The Intelligent, Offline-First Companion for HomeBank',
+        theme_color: '#3b82f6',
         background_color: '#ffffff',
         display: 'standalone',
         orientation: 'portrait',
-        start_url: '/hb-go/',
-        scope: '/hb-go/',
         icons: [
           {
             src: 'icons/icon-192.png',
