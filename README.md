@@ -2,11 +2,11 @@
 
 ![v1.0.0](https://img.shields.io/badge/version-1.0.0-blue)
 
-A lightweight, offline-first companion app for HomeBank. Scan receipts, auto-tag with AI, and export to desktop.
+The Intelligent, Offline-First Companion for HomeBank.
 
 ## Key Features
 
-*   **Offline-first PWA**: Works without internet connection.
+*   **Offline-First:** Works completely without internet using PWA caching technology.
 *   **Manual Transaction Entry**: Quickly add transactions on the go.
 *   **HomeBank Integration**: Import `.xhb` files for Categories/Payees and export transactions as CSV.
 *   **BYOK AI Scanning**: Use your own OpenAI or Google Gemini key for smart receipt scanning.
