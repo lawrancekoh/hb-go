@@ -401,12 +401,17 @@ function Settings() {
         </div>
 
         {/* Developer Credits */}
-        <div className="text-xs text-gray-400">
-          <p>Developed by Lawrance Koh © {new Date().getFullYear()}</p>
+        <div className="text-xs text-gray-500 dark:text-gray-400 space-y-1">
+          <p>Built with 🤖 & ❤️ by <span className="font-semibold text-gray-900 dark:text-white">Lawrance Koh</span>.</p>
+          <p className="italic">"A HomeBank user since March 2025."</p>
         </div>
 
         {/* Action Links */}
-        <div className="flex justify-center gap-4 text-sm font-medium">
+        <div className="flex justify-center gap-4 text-sm font-medium pt-2">
+          <a href="https://www.linkedin.com/in/lawrancekoh" target="_blank" rel="noreferrer" className="text-blue-600 hover:underline">
+            LinkedIn
+          </a>
+          <span className="text-gray-300">|</span>
           <a href="mailto:lawrancekoh@outlook.com?subject=HB-Go%20feedback" className="flex items-center gap-1 text-blue-500 hover:underline">
             <Mail className="h-3 w-3" />
             Contact

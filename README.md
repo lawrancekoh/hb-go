@@ -48,6 +48,13 @@ The Intelligent, Offline-First Companion for HomeBank.
     npm run build
     ```
 
+## 👨‍💻 Why I Built This
+I started my personal finance journey with **HomeBank** in March 2025. I loved the privacy and power of the desktop software, but the "gap" between buying a coffee and sitting at my computer was where my data often got lost.
+
+As an **AI enthusiast**, I realized I could solve this friction. I built **HB Go** to be the missing link—combining the privacy of offline-first software with the intelligence of modern Vision LLMs. I wanted a tool that didn't just take pictures, but actually *understood* the context of my spending.
+
+Connect with me on [LinkedIn](https://www.linkedin.com/in/lawrancekoh)!
+
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
