@@ -13,6 +13,7 @@
 *   Smart Receipt Cropping & Rotation.
 *   Smart Auto-Complete (Payee/Category matching).
 *   CSV Export (HomeBank compatible).
+*   **Smart Tagging:** Added 'Suggestion Ribbon' for manual entry and 'Strict Whitelist' logic for AI auto-tagging based on imported HomeBank data.
 
 ### ✨ UX
 *   Onboarding Wizard for new users.

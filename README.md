@@ -1,6 +1,6 @@
 # HB Go
 
-![v1.0.0](https://img.shields.io/badge/version-1.0.0-blue)
+![Current Version: v1.0.0](https://img.shields.io/badge/Current_Version-v1.0.0-blue)
 
 The Intelligent, Offline-First Companion for HomeBank.
 
@@ -21,6 +21,15 @@ The Intelligent, Offline-First Companion for HomeBank.
 2.  **(Optional) Add AI Key**: Go to Settings to configure your OpenAI or Gemini API key for enhanced scanning.
 3.  **Snap Photo**: Tap the camera icon, take a picture of your receipt, crop it, and save.
 4.  **Export CSV**: When ready, export your transactions to CSV and import them into HomeBank on your desktop.
+
+## Tech Stack
+
+*   **Vite PWA**: For offline capabilities and progressive web app features.
+*   **React Image Crop**: For advanced image cropping and manipulation.
+*   **React**: UI library.
+*   **Tailwind CSS**: Utility-first CSS framework.
+*   **Tesseract.js**: For local OCR fallback.
+*   **IDB**: For IndexedDB storage.
 
 ## Development
 
