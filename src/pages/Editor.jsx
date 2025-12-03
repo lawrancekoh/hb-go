@@ -38,6 +38,7 @@ function Editor() {
   const [previewUrl, setPreviewUrl] = useState(null);
   const [aiConfig, setAiConfig] = useState(null);
   const [croppingImage, setCroppingImage] = useState(null); // Base64 of image being cropped
+  const [existingTags, setExistingTags] = useState([]); // Loaded from local storage
 
   const amountInputRef = useRef(null);
 
@@ -47,6 +48,19 @@ function Editor() {
         const cache = await storageService.getCache();
         if (cache.categories) setCategories(cache.categories);
         if (cache.payees) setPayees(cache.payees);
+
+        // Load Tags from LocalStorage
+        const storedTags = localStorage.getItem('hb_tags');
+        if (storedTags) {
+            try {
+                const parsed = JSON.parse(storedTags);
+                if (Array.isArray(parsed)) {
+                    setExistingTags(parsed);
+                }
+            } catch (e) {
+                console.error("Failed to parse tags", e);
+            }
+        }
 
         // Load AI Config
         const storedAiConfig = localStorage.getItem('hb_ai_config');
@@ -150,6 +164,27 @@ function Editor() {
               }
           }
 
+          // Handle Tags Guess
+          let finalTags = formData.tags;
+          if (result.tags_guess && Array.isArray(result.tags_guess) && existingTags.length > 0) {
+              const validGuesses = result.tags_guess.filter(guess =>
+                  existingTags.some(existing => existing.toLowerCase() === guess.toLowerCase())
+              );
+
+              if (validGuesses.length > 0) {
+                  // Append to existing tags, avoiding duplicates
+                  const currentTags = finalTags ? finalTags.split(' ').filter(Boolean) : [];
+                  validGuesses.forEach(tag => {
+                       // Find the correct case from existingTags
+                       const correctCaseTag = existingTags.find(t => t.toLowerCase() === tag.toLowerCase());
+                       if (correctCaseTag && !currentTags.includes(correctCaseTag)) {
+                           currentTags.push(correctCaseTag);
+                       }
+                  });
+                  finalTags = currentTags.join(' ');
+              }
+          }
+
           // Validate Date/Time
           const validDate = validateDate(result.date);
           const validTime = validateTime(result.time);
@@ -161,7 +196,8 @@ function Editor() {
               payee: bestPayee || prev.payee,
               amount: displayAmount !== undefined ? displayAmount : prev.amount,
               category: bestCategory || prev.category,
-              memo: formattedMemo || prev.memo
+              memo: formattedMemo || prev.memo,
+              tags: finalTags || prev.tags
           }));
 
           setOcrStatus('AI Success');
@@ -328,6 +364,35 @@ function Editor() {
     });
     navigate('/');
   };
+
+  // Tag Suggestion Logic
+  const getTagSuggestions = () => {
+    if (!formData.tags) return [];
+    const parts = formData.tags.split(' ');
+    const activeKeyword = parts[parts.length - 1];
+
+    if (!activeKeyword) return [];
+
+    const matches = existingTags.filter(tag =>
+        tag.toLowerCase().startsWith(activeKeyword.toLowerCase()) ||
+        tag.toLowerCase().includes(activeKeyword.toLowerCase())
+    ).slice(0, 5); // Limit to 5
+
+    // Filter out tags that are already used
+    const usedTags = parts.slice(0, -1).map(t => t.toLowerCase());
+    return matches.filter(tag => !usedTags.includes(tag.toLowerCase()));
+  };
+
+  const handleTagSuggestionClick = (tag) => {
+      const parts = formData.tags.split(' ');
+      parts.pop(); // Remove partial keyword
+      parts.push(tag);
+      parts.push(''); // Add space for next tag
+      setFormData(prev => ({ ...prev, tags: parts.join(' ') }));
+      // Focus back on tags input? (Ideally yes, but simple click handler for now)
+  };
+
+  const tagSuggestions = getTagSuggestions();
 
   return (
     <div className="flex flex-col gap-6 max-w-4xl mx-auto">
@@ -542,7 +607,24 @@ function Editor() {
                     onChange={handleChange}
                     placeholder="Space separated tags"
                     className="dark:text-slate-100"
+                    autoComplete="off"
                   />
+
+                  {/* Suggestion Ribbon */}
+                  {tagSuggestions.length > 0 && (
+                      <div className="flex gap-2 overflow-x-auto py-2 no-scrollbar">
+                          {tagSuggestions.map(tag => (
+                              <button
+                                key={tag}
+                                type="button"
+                                onClick={() => handleTagSuggestionClick(tag)}
+                                className="bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-slate-200 text-xs px-3 py-1 rounded-full whitespace-nowrap hover:bg-slate-300 dark:hover:bg-slate-600 transition-colors"
+                              >
+                                  {tag}
+                              </button>
+                          ))}
+                      </div>
+                  )}
               </div>
 
               <div className="space-y-2">
