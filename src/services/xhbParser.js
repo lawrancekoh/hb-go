@@ -42,9 +42,20 @@ export const xhbParser = {
       payees.push(payNodes[i].getAttribute("name"));
     }
 
+    // Extract Tags
+    const tagNodes = xmlDoc.getElementsByTagName("tag");
+    const tags = [];
+    for (let i = 0; i < tagNodes.length; i++) {
+      const tagName = tagNodes[i].getAttribute("name");
+      if (tagName) tags.push(tagName);
+    }
+    // Save to LocalStorage
+    localStorage.setItem('hb_tags', JSON.stringify(tags));
+
     return {
       categories: resolvedCategories,
-      payees: payees.sort()
+      payees: payees.sort(),
+      tags: tags.sort()
     };
   }
 };

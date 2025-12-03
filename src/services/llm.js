@@ -106,6 +106,7 @@ export const llmService = {
        - category_guess: derived from merchant.
        - payment_method: string (e.g. Visa, Cash, Amex).
        - items_summary: string, max 5 words summary of items.
+       - Analyze context for potential tags. Look for Meal Times ('lunch', 'dinner') or Payment Keywords ('visa', 'nets', 'paynow'). Return a field "tags_guess": array of strings (lowercase).
        - is_receipt: true.
        - IMPORTANT: Assume the date on the receipt follows the **${dateFormat}** format. (e.g., if format is DD/MM, 10/01 is January 10th).
 
@@ -116,6 +117,7 @@ export const llmService = {
        - amount: Return 0 (zero).
        - is_receipt: false.
        - date: Today's date (YYYY-MM-DD) if unknown.
+       - tags_guess: Guess relevant tags based on object context (e.g. 'coffee', 'electronics').
     `;
 
     let responseText = '';
