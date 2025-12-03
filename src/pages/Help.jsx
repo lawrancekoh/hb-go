@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { Card, CardHeader, CardTitle, CardContent } from '../components/ui/Card';
-import { ArrowLeft, BookOpen, Upload, Camera, Download, Smartphone, ShieldCheck, Sparkles } from 'lucide-react';
+import { ArrowLeft, BookOpen, Upload, Camera, Download, Smartphone, ShieldCheck, Sparkles, Key } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 
 function Help() {
@@ -59,6 +59,39 @@ function Help() {
                             <strong>Automation:</strong> Set up 'Assignments' in HomeBank Desktop to automate categories based on Payee names.
                         </li>
                     </ul>
+                </div>
+            </CardContent>
+        </Card>
+
+        <Card>
+            <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                    <Key className="h-5 w-5 text-brand-600" />
+                    How to get an AI Key
+                </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4 text-slate-600 dark:text-gray-300">
+                <p>To unlock smart scanning, you need a key from an AI provider. Your key is stored locally on your device.</p>
+
+                <div>
+                    <h3 className="font-semibold text-slate-900 dark:text-white mb-2">Google Gemini (Recommended - Free Option)</h3>
+                    <ol className="list-decimal list-inside space-y-1">
+                        <li>Go to <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noreferrer" className="text-brand-600 dark:text-brand-400 hover:underline">Google AI Studio</a>.</li>
+                        <li>Sign in with your Google account.</li>
+                        <li>Click <strong>"Create API Key"</strong>.</li>
+                        <li>Copy the key and paste it into HB Go settings.</li>
+                    </ol>
+                    <p className="text-sm italic mt-2 text-slate-500">Tip: The free tier is usually sufficient for personal receipt scanning.</p>
+                </div>
+
+                <div>
+                    <h3 className="font-semibold text-slate-900 dark:text-white mb-2">OpenAI (Paid Option)</h3>
+                    <ol className="list-decimal list-inside space-y-1">
+                        <li>Go to <a href="https://platform.openai.com/api-keys" target="_blank" rel="noreferrer" className="text-brand-600 dark:text-brand-400 hover:underline">OpenAI Platform</a>.</li>
+                        <li>Sign up and add a payment method (Pre-paid credits are usually required).</li>
+                        <li>Click <strong>"Create new secret key"</strong>.</li>
+                        <li>Copy and paste it here.</li>
+                    </ol>
                 </div>
             </CardContent>
         </Card>
