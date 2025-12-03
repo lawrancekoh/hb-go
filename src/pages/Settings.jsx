@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { storageService } from '../services/storage';
 import { xhbParser } from '../services/xhbParser';
 import { llmService } from '../services/llm';
-import { Upload, Trash2, Database, Tag, Save, Scan, Sparkles, CheckCircle2, AlertCircle, Calendar } from 'lucide-react';
+import { Upload, Trash2, Database, Tag, Save, Scan, Sparkles, CheckCircle2, AlertCircle, Calendar, Mail, Coffee, Github } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { Label } from '../components/ui/Label';
@@ -388,9 +388,37 @@ function Settings() {
           </CardContent>
       </Card>
 
-      <div className="mt-8 text-center text-sm text-gray-400 dark:text-gray-500">
-        HB Go v{__APP_VERSION__}
-      </div>
+      {/* About Footer */}
+      <footer className="mt-12 py-8 text-center space-y-4 border-t border-gray-100 dark:border-gray-800">
+        {/* Brand & Version */}
+        <div>
+          <h3 className="text-sm font-semibold text-gray-900 dark:text-white">HB Go</h3>
+          <p className="text-xs text-gray-500">v{__APP_VERSION__} • Offline PWA</p>
+        </div>
+
+        {/* Developer Credits */}
+        <div className="text-xs text-gray-400">
+          <p>Developed by Lawrance Koh © {new Date().getFullYear()}</p>
+        </div>
+
+        {/* Action Links */}
+        <div className="flex justify-center gap-4 text-sm font-medium">
+          <a href="mailto:lawrancekoh@outlook.com?subject=HB-Go%20feedback" className="flex items-center gap-1 text-blue-500 hover:underline">
+            <Mail className="h-3 w-3" />
+            Contact
+          </a>
+          <span className="text-gray-300">|</span>
+          <a href="https://paypal.me/lawrancekoh" target="_blank" rel="noreferrer" className="flex items-center gap-1 text-amber-500 hover:underline">
+            <Coffee className="h-3 w-3" />
+            Support
+          </a>
+          <span className="text-gray-300">|</span>
+          <a href="https://github.com/lawrancekoh/hb-go" target="_blank" rel="noreferrer" className="flex items-center gap-1 text-gray-600 dark:text-gray-400 hover:underline">
+            <Github className="h-3 w-3" />
+            Source
+          </a>
+        </div>
+      </footer>
 
     </div>
   );

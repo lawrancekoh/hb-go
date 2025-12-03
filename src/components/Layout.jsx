@@ -72,21 +72,6 @@ function Layout({ children }) {
         {children}
       </main>
 
-      {/* Footer */}
-      <footer className="bg-slate-100 dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 py-8 text-center text-slate-500 dark:text-slate-400 text-xs space-y-2">
-        <p>HB Go • Offline PWA for <a href="https://www.gethomebank.org/" target="_blank" rel="noopener noreferrer" className="text-brand-600 dark:text-brand-400 hover:underline">HomeBank</a></p>
-        <p>
-          Developed by Lawrance Koh • &copy; {new Date().getFullYear()}
-        </p>
-        <p>
-          Contact: <a href="mailto:lawrancekoh@outlook.com?subject=HB-Go%20feedback" className="text-brand-600 dark:text-brand-400 hover:underline">lawrancekoh@outlook.com</a>
-        </p>
-        <div className="pt-2">
-          <p>
-            Find this app useful? <a href="https://paypal.me/lawrancekoh" target="_blank" rel="noopener noreferrer" className="text-brand-600 dark:text-brand-400 hover:underline font-medium">Buy me a coffee ☕</a>
-          </p>
-        </div>
-      </footer>
     </div>
   );
 }
