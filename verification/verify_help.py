@@ -1,28 +1,29 @@
+
 from playwright.sync_api import sync_playwright
 
-def verify_help_dark_mode():
+def verify_help_footer():
     with sync_playwright() as p:
         browser = p.chromium.launch(headless=True)
-        context = browser.new_context(
-            color_scheme='dark'  # Force dark mode preference
-        )
-        page = context.new_page()
+        page = browser.new_page()
+        try:
+            # Navigate to the Help page (hash router)
+            page.goto('http://localhost:5173/#/help')
+            page.wait_for_selector('h3:has-text("Still need help?")')
 
-        # Navigate to Help page
-        # Note: Using hash router path
-        page.goto("http://localhost:5173/#/help")
+            # Scroll to bottom
+            page.evaluate('window.scrollTo(0, document.body.scrollHeight)')
+            page.wait_for_timeout(500) # Wait for potential layout shifts
 
-        # Wait for content to load
-        page.wait_for_selector("h1:has-text('How to Use')")
+            # Take screenshot of the footer area
+            # We can select the last element with class border-t if we want targeted, or full page
+            # Let's take full page to see context, or viewport
+            page.screenshot(path='verification/help_footer.png', full_page=True)
+            print('Screenshot saved to verification/help_footer.png')
+        except Exception as e:
+            print(f'Error: {e}')
+        finally:
+            browser.close()
 
-        # Manually force dark mode class on html element just in case
-        # app uses class-based dark mode (Tailwind) rather than just system pref
-        page.evaluate("document.documentElement.classList.add('dark')")
+if __name__ == '__main__':
+    verify_help_footer()
 
-        # Take screenshot
-        page.screenshot(path="verification/help_dark_mode.png", full_page=True)
-
-        browser.close()
-
-if __name__ == "__main__":
-    verify_help_dark_mode()
