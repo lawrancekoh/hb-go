@@ -21,21 +21,42 @@ function Help() {
                     Pro Tips
                 </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-3 text-slate-600">
-                <ul className="list-disc list-inside space-y-2">
-                    <li>
-                        <strong>AI Setup:</strong> Go to Settings to add an OpenAI/Gemini key for super-accurate scanning.
-                    </li>
-                    <li>
-                        <strong>Cropping:</strong> Crop your image tightly around the text to remove table backgrounds and improve results.
-                    </li>
-                    <li>
-                        <strong>Tagging:</strong> Search <code>tag:mobile-import</code> in HomeBank to find transactions added via this app.
-                    </li>
-                    <li>
-                        <strong>Automation:</strong> Set up 'Assignments' in HomeBank Desktop to automate categories based on Payee names.
-                    </li>
-                </ul>
+            <CardContent className="space-y-6 text-slate-600">
+                <div>
+                    <h3 className="font-semibold text-slate-900 mb-2">App Features</h3>
+                    <ul className="list-disc list-inside space-y-2">
+                        <li>
+                            <strong>AI Setup:</strong> Go to Settings to add an OpenAI/Gemini key for super-accurate scanning.
+                        </li>
+                        <li>
+                            <strong>No Receipt? No Problem:</strong> Snap a photo of the item itself (like a coffee cup or parking meter). The AI will describe the item and guess the category.
+                        </li>
+                        <li>
+                            <strong>Cropping:</strong> Crop your image tightly around the text to remove table backgrounds and improve results.
+                        </li>
+                        <li>
+                            <strong>Pro Mode:</strong> Set a 'Default Category' in Settings (e.g., Dining Out) to skip a step for your most frequent purchases.
+                        </li>
+                    </ul>
+                </div>
+
+                <div>
+                    <h3 className="font-semibold text-slate-900 mb-2">Desktop Workflow</h3>
+                    <ul className="list-disc list-inside space-y-2">
+                        <li>
+                            <strong>Chronological Order:</strong> We save the time <code>[HH:MM]</code> to the Memo. In HomeBank, sort by the Memo column to see your day's spending in exact order.
+                        </li>
+                        <li>
+                            <strong>Handling Splits:</strong> Need to split a bill? Capture the Total Amount here. In HomeBank Desktop, simply click 'Split' on the transaction to divide it into multiple categories.
+                        </li>
+                        <li>
+                            <strong>Tagging:</strong> Search <code>tag:mobile-import</code> in HomeBank to find transactions added via this app.
+                        </li>
+                        <li>
+                            <strong>Automation:</strong> Set up 'Assignments' in HomeBank Desktop to automate categories based on Payee names.
+                        </li>
+                    </ul>
+                </div>
             </CardContent>
         </Card>
 
