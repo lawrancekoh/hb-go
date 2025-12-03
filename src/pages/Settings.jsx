@@ -388,6 +388,10 @@ function Settings() {
           </CardContent>
       </Card>
 
+      <div className="mt-8 text-center text-sm text-gray-400 dark:text-gray-500">
+        HB Go v{__APP_VERSION__}
+      </div>
+
     </div>
   );
 }
