@@ -494,7 +494,16 @@ function Editor() {
           <form onSubmit={handleSubmit} className="flex flex-col gap-5">
               <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                      <Label className="dark:text-slate-200">Date</Label>
+                      <div className="flex justify-between items-center">
+                          <Label className="dark:text-slate-200">Date</Label>
+                          <button
+                            type="button"
+                            onClick={() => setFormData(prev => ({ ...prev, date: getToday() }))}
+                            className="text-xs font-medium text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30 px-2 py-1 rounded cursor-pointer hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors"
+                          >
+                            Today
+                          </button>
+                      </div>
                       <Input
                         type="date"
                         name="date"
@@ -518,17 +527,28 @@ function Editor() {
 
               <div className="space-y-2">
                   <Label className="dark:text-slate-200">Payee</Label>
-                  <Input
-                    type="text"
-                    name="payee"
-                    value={formData.payee}
-                    onChange={handleChange}
-                    list="payee-list"
-                    placeholder="Merchant Name"
-                    required
-                    autoComplete="off"
-                    className="dark:text-slate-100"
-                  />
+                  <div className="relative">
+                      <Input
+                        type="text"
+                        name="payee"
+                        value={formData.payee}
+                        onChange={handleChange}
+                        list="payee-list"
+                        placeholder="Merchant Name"
+                        required
+                        autoComplete="off"
+                        className="dark:text-slate-100 pr-10"
+                      />
+                      {formData.payee && (
+                          <button
+                              type="button"
+                              onClick={() => setFormData(prev => ({ ...prev, payee: '' }))}
+                              className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300 p-1"
+                          >
+                              <X className="h-4 w-4" />
+                          </button>
+                      )}
+                  </div>
                   <datalist id="payee-list">
                       {payees.map(p => <option key={p} value={p} />)}
                   </datalist>
@@ -576,27 +596,47 @@ function Editor() {
                         value={formData.amount}
                         onChange={handleChange}
                         className={cn(
-                            "pl-7 font-mono font-medium",
+                            "pl-7 pr-10 font-mono font-medium",
                             transactionType === 'expense' ? "text-red-600 dark:text-red-400" : "text-emerald-600 dark:text-emerald-400"
                         )}
                         placeholder="0.00"
                         required
                       />
+                      {formData.amount && (
+                          <button
+                              type="button"
+                              onClick={() => setFormData(prev => ({ ...prev, amount: '' }))}
+                              className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300 p-1"
+                          >
+                              <X className="h-4 w-4" />
+                          </button>
+                      )}
                   </div>
               </div>
 
               <div className="space-y-2">
                   <Label className="dark:text-slate-200">Category</Label>
-                  <Input
-                    type="text"
-                    name="category"
-                    value={formData.category}
-                    onChange={handleChange}
-                    list="category-list"
-                    placeholder="Select or Type Category"
-                    autoComplete="off"
-                    className="dark:text-slate-100"
-                  />
+                  <div className="relative">
+                      <Input
+                        type="text"
+                        name="category"
+                        value={formData.category}
+                        onChange={handleChange}
+                        list="category-list"
+                        placeholder="Select or Type Category"
+                        autoComplete="off"
+                        className="dark:text-slate-100 pr-10"
+                      />
+                      {formData.category && (
+                          <button
+                              type="button"
+                              onClick={() => setFormData(prev => ({ ...prev, category: '' }))}
+                              className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300 p-1"
+                          >
+                              <X className="h-4 w-4" />
+                          </button>
+                      )}
+                  </div>
                   <datalist id="category-list">
                     {categories.map(cat => (
                         <option key={cat} value={cat} />
@@ -606,15 +646,26 @@ function Editor() {
 
               <div className="space-y-2">
                   <Label className="dark:text-slate-200">Tags</Label>
-                  <Input
-                    type="text"
-                    name="tags"
-                    value={formData.tags}
-                    onChange={handleChange}
-                    placeholder="Space separated tags"
-                    className="dark:text-slate-100"
-                    autoComplete="off"
-                  />
+                  <div className="relative">
+                      <Input
+                        type="text"
+                        name="tags"
+                        value={formData.tags}
+                        onChange={handleChange}
+                        placeholder="Space separated tags"
+                        className="dark:text-slate-100 pr-10"
+                        autoComplete="off"
+                      />
+                      {formData.tags && (
+                          <button
+                              type="button"
+                              onClick={() => setFormData(prev => ({ ...prev, tags: '' }))}
+                              className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300 p-1"
+                          >
+                              <X className="h-4 w-4" />
+                          </button>
+                      )}
+                  </div>
 
                   {/* Suggestion Ribbon */}
                   {tagSuggestions.length > 0 && (
@@ -635,14 +686,25 @@ function Editor() {
 
               <div className="space-y-2">
                   <Label className="dark:text-slate-200">Memo</Label>
-                  <Input
-                    type="text"
-                    name="memo"
-                    value={formData.memo}
-                    onChange={handleChange}
-                    placeholder="Notes"
-                    className="dark:text-slate-100"
-                  />
+                  <div className="relative">
+                      <Input
+                        type="text"
+                        name="memo"
+                        value={formData.memo}
+                        onChange={handleChange}
+                        placeholder="Notes"
+                        className="dark:text-slate-100 pr-10"
+                      />
+                      {formData.memo && (
+                          <button
+                              type="button"
+                              onClick={() => setFormData(prev => ({ ...prev, memo: '' }))}
+                              className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300 p-1"
+                          >
+                              <X className="h-4 w-4" />
+                          </button>
+                      )}
+                  </div>
               </div>
 
               <div className="pt-4 sticky bottom-0 bg-white md:static p-4 md:p-0 -mx-4 md:mx-0 border-t md:border-0 shadow-lg md:shadow-none flex gap-3 dark:bg-slate-900 dark:border-slate-800">
