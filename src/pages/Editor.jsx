@@ -186,12 +186,18 @@ function Editor() {
           }
 
           // Validate Date/Time
-          const validDate = validateDate(result.date);
+          const aiDate = result.date;
+          // 1. Validate the AI's return (checks format, future dates, etc.)
+          const validatedDate = validateDate(aiDate);
+
+          // 2. Fallback: If AI returned null (Object Mode) or invalid, use TODAY.
+          const finalDate = validatedDate || getToday();
+
           const validTime = validateTime(result.time);
 
           setFormData(prev => ({
               ...prev,
-              date: validDate || getToday(),
+              date: finalDate,
               time: validTime || getCurrentTime(),
               payee: bestPayee || prev.payee,
               amount: displayAmount !== undefined ? displayAmount : prev.amount,
