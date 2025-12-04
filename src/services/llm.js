@@ -101,14 +101,18 @@ export const llmService = {
 
     const SYSTEM_PROMPT = `Analyze this image. It is either a receipt or a general object/item. Return ONLY a strict JSON object (no markdown, no backticks).
 
+    DATE LOGIC:
+    1. Search strictly for **visible text** resembling a date on a receipt/document within the image.
+    2. If a receipt date is found, extract it using the format **${dateFormat}**.
+    3. If **NO text date** is visible (e.g., photo of a food item, coffee cup, or object), return null. **DO NOT** guess today's date.
+
     1. If it is a RECEIPT:
-       - Extract: date (YYYY-MM-DD), time (HH:MM), merchant (string), amount (number, total only), currency (symbol).
+       - Extract: date (YYYY-MM-DD, see DATE LOGIC above), time (HH:MM), merchant (string), amount (number, total only), currency (symbol).
        - category_guess: derived from merchant.
        - payment_method: string (e.g. Visa, Cash, Amex).
        - items_summary: string, max 5 words summary of items.
        - Analyze context for potential tags. Look for Meal Times ('lunch', 'dinner') or Payment Keywords ('visa', 'nets', 'paynow'). Return a field "tags_guess": array of strings (lowercase).
        - is_receipt: true.
-       - IMPORTANT: Assume the date on the receipt follows the **${dateFormat}** format. (e.g., if format is DD/MM, 10/01 is January 10th).
 
     2. If it is an OBJECT (no receipt text found):
        - merchant: Guess based on brand/logo or object type (e.g., "Starbucks", "Vending Machine", "Taxi", "Apple").
@@ -116,7 +120,7 @@ export const llmService = {
        - items_summary: Describe the visual object (e.g., "Latte", "Blue Keyboard").
        - amount: Return 0 (zero).
        - is_receipt: false.
-       - date: Today's date (YYYY-MM-DD) if unknown.
+       - date: null.
        - tags_guess: Guess relevant tags based on object context (e.g. 'coffee', 'electronics').
     `;
 
