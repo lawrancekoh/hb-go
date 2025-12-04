@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { storageService } from '../services/storage';
 import { xhbParser } from '../services/xhbParser';
 import { llmService } from '../services/llm';
-import { Upload, Trash2, Database, Tag, Save, Scan, Sparkles, CheckCircle2, AlertCircle, Calendar, Mail, Coffee, Github } from 'lucide-react';
+import { Upload, Trash2, Database, Tag, Save, Scan, Sparkles, CheckCircle2, AlertCircle, Calendar, Coffee, Github } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { Label } from '../components/ui/Label';
@@ -417,17 +417,12 @@ function Settings() {
           <a href="https://www.linkedin.com/in/lawrancekoh" target="_blank" rel="noreferrer" className="text-blue-600 hover:underline">
             LinkedIn
           </a>
-          <span className="text-gray-300">|</span>
-          <a href="mailto:lawrancekoh@outlook.com?subject=HB-Go%20feedback" className="flex items-center gap-1 text-blue-500 hover:underline">
-            <Mail className="h-3 w-3" />
-            Contact
-          </a>
-          <span className="text-gray-300">|</span>
+          <span className="text-gray-300 dark:text-gray-600">|</span>
           <a href="https://paypal.me/lawrancekoh" target="_blank" rel="noreferrer" className="flex items-center gap-1 text-amber-500 hover:underline">
             <Coffee className="h-3 w-3" />
             Support
           </a>
-          <span className="text-gray-300">|</span>
+          <span className="text-gray-300 dark:text-gray-600">|</span>
           <a href="https://github.com/lawrancekoh/hb-go" target="_blank" rel="noreferrer" className="flex items-center gap-1 text-gray-600 dark:text-gray-400 hover:underline">
             <Github className="h-3 w-3" />
             Source
