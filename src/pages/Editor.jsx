@@ -127,17 +127,22 @@ function Editor() {
           }
 
           // Smart match category
-          let bestCategory = '';
-          // We prioritize category guess
-          if (result.category_guess && categories.length > 0) {
-              const match = matchingService.findBestMatch(result.category_guess, categories);
-              if (match) bestCategory = match;
-          }
+          const aiGuess = result.category_guess;
+          const matchedCategory = (aiGuess && categories.length > 0)
+              ? matchingService.findBestMatch(aiGuess, categories)
+              : null;
 
-          // Fallback to default category if no match
-          if (!bestCategory) {
-              bestCategory = localStorage.getItem('hb_default_category') || '';
-          }
+          const defaultCategory = localStorage.getItem('hb_default_category') || '';
+
+          // Priority: AI Match > Default > Empty
+          const bestCategory = matchedCategory || defaultCategory;
+
+          console.log("AI Category Debug:", {
+              rawGuess: aiGuess,
+              matched: matchedCategory,
+              userDefault: defaultCategory,
+              final: bestCategory
+          });
 
           // Format Memo
           const formattedMemo = formatMemo({
