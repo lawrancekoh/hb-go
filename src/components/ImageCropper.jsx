@@ -192,7 +192,7 @@ export default function ImageCropper({ imageSrc, onCancel, onConfirm }) {
 
       {/* Middle - Image Area */}
       <div
-        className="flex-1 overflow-auto flex items-center justify-center p-8 bg-neutral-900 touch-pan-x touch-pan-y w-full"
+        className="flex-1 overflow-auto flex items-center justify-center p-8 bg-neutral-900 touch-pan-x touch-pan-y"
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
       >
