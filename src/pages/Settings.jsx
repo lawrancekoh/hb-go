@@ -19,6 +19,8 @@ function Settings() {
   const [cache, setCache] = useState({ categories: [], payees: [] });
   const [tagCount, setTagCount] = useState(0);
   const [importStatus, setImportStatus] = useState('');
+  const [lastSync, setLastSync] = useState(localStorage.getItem('hb_last_sync'));
+  const [fileDate, setFileDate] = useState(localStorage.getItem('hb_file_date'));
 
   // AI Config State
   const [aiConfig, setAiConfig] = useState({
@@ -56,6 +58,13 @@ function Settings() {
     const file = e.target.files[0];
     if (!file) return;
 
+    // Save Sync Info
+    localStorage.setItem('hb_file_date', file.lastModified);
+    const now = new Date().toISOString();
+    localStorage.setItem('hb_last_sync', now);
+    setFileDate(file.lastModified);
+    setLastSync(now);
+
     const reader = new FileReader();
     reader.onload = async (event) => {
       try {
@@ -79,6 +88,10 @@ function Settings() {
       setCache({ categories: [], payees: [] });
       setImportStatus('All data cleared.');
       localStorage.removeItem('hb_ai_config');
+      localStorage.removeItem('hb_last_sync');
+      localStorage.removeItem('hb_file_date');
+      setLastSync(null);
+      setFileDate(null);
       setAiConfig({
           provider: 'openai',
           baseUrl: 'https://api.openai.com/v1',
@@ -302,6 +315,19 @@ function Settings() {
                       </p>
                   </div>
               </div>
+
+              {(lastSync || fileDate) && (
+                <div className="mt-4 pt-3 border-t border-gray-100 dark:border-gray-800">
+                    <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400">
+                    <span>Synced:</span>
+                    <span className="font-mono">{lastSync ? new Date(lastSync).toLocaleString() : 'N/A'}</span>
+                    </div>
+                    <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400 mt-1">
+                    <span>File Date:</span>
+                    <span className="font-mono">{fileDate ? new Date(parseInt(fileDate)).toLocaleString() : 'N/A'}</span>
+                    </div>
+                </div>
+              )}
           </CardContent>
       </Card>
 
