@@ -1,17 +1,26 @@
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { storageService } from '../services/storage';
 import { xhbParser } from '../services/xhbParser';
 import { llmService } from '../services/llm';
-import { Upload, Trash2, Database, Tag, Save, Scan, Sparkles, CheckCircle2, AlertCircle } from 'lucide-react';
+import { Upload, Trash2, Database, Tag, Save, Scan, Sparkles, CheckCircle2, AlertCircle, Calendar, Coffee, Github } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { Label } from '../components/ui/Label';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '../components/ui/Card';
 
 function Settings() {
-  const [settings, setSettings] = useState({ defaultTag: '', ocrProvider: 'auto' });
+  const [settings, setSettings] = useState({
+      defaultTag: '',
+      ocrProvider: 'auto',
+      theme: localStorage.getItem('hb_theme') || 'system',
+      defaultCategory: localStorage.getItem('hb_default_category') || ''
+  });
   const [cache, setCache] = useState({ categories: [], payees: [] });
+  const [tagCount, setTagCount] = useState(0);
   const [importStatus, setImportStatus] = useState('');
+  const [lastSync, setLastSync] = useState(localStorage.getItem('hb_last_sync'));
+  const [fileDate, setFileDate] = useState(localStorage.getItem('hb_file_date'));
 
   // AI Config State
   const [aiConfig, setAiConfig] = useState({
@@ -32,6 +41,10 @@ function Settings() {
         });
         setCache(await storageService.getCache());
 
+        // Read hb_tags from localStorage
+        const tags = JSON.parse(localStorage.getItem('hb_tags') || '[]');
+        setTagCount(tags.length);
+
         // Load AI Config from localStorage
         const storedAiConfig = localStorage.getItem('hb_ai_config');
         if (storedAiConfig) {
@@ -45,13 +58,21 @@ function Settings() {
     const file = e.target.files[0];
     if (!file) return;
 
+    // Save Sync Info
+    localStorage.setItem('hb_file_date', file.lastModified);
+    const now = new Date().toISOString();
+    localStorage.setItem('hb_last_sync', now);
+    setFileDate(file.lastModified);
+    setLastSync(now);
+
     const reader = new FileReader();
     reader.onload = async (event) => {
       try {
         const parsedData = xhbParser.parse(event.target.result);
         await storageService.saveCache(parsedData);
         setCache(parsedData);
-        setImportStatus(`Success! Loaded ${parsedData.categories.length} categories and ${parsedData.payees.length} payees.`);
+        setTagCount(parsedData.tags ? parsedData.tags.length : 0);
+        setImportStatus(`Success! Loaded ${parsedData.categories.length} categories, ${parsedData.payees.length} payees, and ${parsedData.tags?.length || 0} tags.`);
       } catch (error) {
         console.error(error);
         setImportStatus('Error parsing file.');
@@ -67,6 +88,10 @@ function Settings() {
       setCache({ categories: [], payees: [] });
       setImportStatus('All data cleared.');
       localStorage.removeItem('hb_ai_config');
+      localStorage.removeItem('hb_last_sync');
+      localStorage.removeItem('hb_file_date');
+      setLastSync(null);
+      setFileDate(null);
       setAiConfig({
           provider: 'openai',
           baseUrl: 'https://api.openai.com/v1',
@@ -79,9 +104,22 @@ function Settings() {
 
   const handleSettingChange = async (e) => {
     const { name, value } = e.target;
-    const newSettings = { ...settings, [name]: value };
-    setSettings(newSettings);
-    await storageService.saveSettings(newSettings);
+
+    // Special handling for Theme
+    if (name === 'theme') {
+        localStorage.setItem('hb_theme', value);
+        window.dispatchEvent(new Event('hb_theme_changed'));
+    }
+    // Special handling for Default Category
+    else if (name === 'defaultCategory') {
+        localStorage.setItem('hb_default_category', value);
+    }
+    // Standard Settings
+    else {
+        await storageService.saveSettings({ ...settings, [name]: value });
+    }
+
+    setSettings(prev => ({ ...prev, [name]: value }));
   };
 
   // AI Configuration Handlers
@@ -123,28 +161,28 @@ function Settings() {
   return (
     <div className="flex flex-col gap-6 max-w-2xl mx-auto pb-20">
       <div className="flex items-center gap-2 mb-2">
-          <h1 className="text-2xl font-bold text-slate-900">Settings</h1>
+          <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">Settings</h1>
       </div>
 
       {/* AI Configuration (Experimental) */}
-      <Card className="border-indigo-100 bg-indigo-50/30">
+      <Card className="border-brand-100 bg-brand-50/30 dark:bg-brand-950/20 dark:border-brand-900">
           <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-indigo-900">
-                  <Sparkles className="h-5 w-5 text-indigo-600" />
+              <CardTitle className="flex items-center gap-2 text-brand-900 dark:text-brand-300">
+                  <Sparkles className="h-5 w-5 text-brand-600 dark:text-brand-400" />
                   AI Configuration (Experimental)
               </CardTitle>
-              <CardDescription>
+              <CardDescription className="dark:text-brand-200/70">
                   Connect your own API key to use advanced AI for receipt scanning.
               </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
               <div className="space-y-2">
-                  <Label>Provider</Label>
+                  <Label className="dark:text-slate-200">Provider</Label>
                   <select
                       name="provider"
                       value={aiConfig.provider}
                       onChange={handleAiConfigChange}
-                      className="w-full h-10 px-3 rounded-md border border-slate-300 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                      className="w-full h-10 px-3 rounded-md border border-slate-300 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 dark:bg-slate-950 dark:border-slate-800 dark:text-slate-100"
                   >
                       <option value="openai">OpenAI</option>
                       <option value="gemini">Google Gemini</option>
@@ -154,19 +192,25 @@ function Settings() {
 
               {aiConfig.provider === 'custom' && (
                   <div className="space-y-2">
-                      <Label>Base URL</Label>
+                      <Label className="dark:text-slate-200">Base URL</Label>
                       <Input
                           type="text"
                           name="baseUrl"
                           value={aiConfig.baseUrl}
                           onChange={handleAiConfigChange}
                           placeholder="https://api.example.com/v1"
+                          className="dark:text-slate-100"
                       />
                   </div>
               )}
 
               <div className="space-y-2">
-                  <Label>API Key</Label>
+                  <div className="flex justify-between items-center">
+                    <Label className="dark:text-slate-200">API Key</Label>
+                    <Link to="/help" className="text-xs text-blue-500 hover:underline cursor-pointer">
+                        Guide: Get a Key
+                    </Link>
+                  </div>
                   <div className="flex gap-2">
                       <Input
                           type="password"
@@ -174,7 +218,7 @@ function Settings() {
                           value={aiConfig.apiKey}
                           onChange={handleAiConfigChange}
                           placeholder="sk-..."
-                          className="flex-1"
+                          className="flex-1 dark:text-slate-100"
                       />
                       <Button
                           onClick={verifyAiKey}
@@ -186,8 +230,8 @@ function Settings() {
                   </div>
                   {aiStatus.message && (
                       <div className={`flex items-center gap-2 text-sm mt-1 ${
-                          aiStatus.type === 'error' ? 'text-red-600' :
-                          aiStatus.type === 'success' ? 'text-emerald-600' : 'text-slate-600'
+                          aiStatus.type === 'error' ? 'text-red-600 dark:text-red-400' :
+                          aiStatus.type === 'success' ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-600 dark:text-slate-400'
                       }`}>
                           {aiStatus.type === 'error' && <AlertCircle className="h-4 w-4" />}
                           {aiStatus.type === 'success' && <CheckCircle2 className="h-4 w-4" />}
@@ -198,21 +242,28 @@ function Settings() {
 
               {aiConfig.models.length > 0 && (
                   <div className="space-y-2">
-                      <Label>Model</Label>
+                      <Label className="dark:text-slate-200">Model</Label>
                       <select
                           name="model"
                           value={aiConfig.model}
                           onChange={handleAiConfigChange}
-                          className="w-full h-10 px-3 rounded-md border border-slate-300 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                          className="w-full h-10 px-3 rounded-md border border-slate-300 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 dark:bg-slate-950 dark:border-slate-800 dark:text-slate-100"
                       >
                           {aiConfig.models.map(m => (
                               <option key={m} value={m}>{m}</option>
                           ))}
                       </select>
+                      {/* Model Help Text */}
+                      {aiConfig.provider !== 'custom' && (
+                         <div className="bg-blue-50 text-blue-800 p-3 rounded-md text-sm space-y-1 border border-blue-100 mt-2 dark:bg-blue-950/40 dark:text-blue-200 dark:border-blue-900">
+                            <p>⚠️ <strong>Requirement:</strong> You must choose a <strong>Vision (Multi-modal)</strong> model to scan images.</p>
+                            <p>✅ <strong>Recommended for Speed & Cost:</strong> <code>gemini-1.5-flash</code> (or newer <code>flash-lite</code>), <code>gpt-4o-mini</code>.</p>
+                         </div>
+                      )}
                   </div>
               )}
 
-              <Button onClick={saveAiConfig} className="w-full gap-2 bg-indigo-600 hover:bg-indigo-700 text-white">
+              <Button onClick={saveAiConfig} className="w-full gap-2 bg-brand-600 hover:bg-brand-700 text-white dark:bg-brand-700 dark:hover:bg-brand-600">
                   <Save className="h-4 w-4" /> Save AI Configuration
               </Button>
           </CardContent>
@@ -221,65 +272,147 @@ function Settings() {
       {/* Data Import Section */}
       <Card>
           <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                  <Database className="h-5 w-5 text-brand-600" />
+              <CardTitle className="flex items-center gap-2 dark:text-slate-100">
+                  <Database className="h-5 w-5 text-brand-600 dark:text-brand-400" />
                   Data Import
               </CardTitle>
-              <CardDescription>
+              <CardDescription className="dark:text-slate-400">
                   Import your HomeBank (.xhb) file to sync categories and payees.
               </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
               <div className="flex flex-col gap-2">
-                  <Label>Select File</Label>
+                  <Label className="dark:text-slate-200">Select File</Label>
                   <Input
                     type="file"
                     accept=".xhb"
                     onChange={handleFileImport}
-                    className="cursor-pointer file:text-brand-600 file:font-semibold"
+                    className="cursor-pointer file:text-brand-600 file:font-semibold dark:text-slate-100 dark:file:text-brand-400"
                   />
                   {importStatus && (
-                      <p className={`text-sm ${importStatus.includes('Error') ? 'text-red-600' : 'text-emerald-600'}`}>
+                      <p className={`text-sm ${importStatus.includes('Error') ? 'text-red-600 dark:text-red-400' : 'text-emerald-600 dark:text-emerald-400'}`}>
                           {importStatus}
                       </p>
                   )}
               </div>
 
-              <div className="grid grid-cols-2 gap-4 bg-slate-50 p-4 rounded-lg border border-slate-100">
+              <div className="grid grid-cols-3 gap-4 bg-slate-50 p-4 rounded-lg border border-slate-100 dark:bg-slate-800 dark:border-slate-700">
                   <div className="text-center">
-                      <p className="text-2xl font-bold text-slate-700">{cache.categories?.length || 0}</p>
-                      <p className="text-xs text-slate-500 uppercase font-medium">Categories</p>
+                      <p className="text-2xl font-bold text-slate-700 dark:text-slate-100">{cache.categories?.length || 0}</p>
+                      <p className="text-xs text-slate-500 uppercase font-medium dark:text-slate-400">Categories</p>
                   </div>
                   <div className="text-center">
-                      <p className="text-2xl font-bold text-slate-700">{cache.payees?.length || 0}</p>
-                      <p className="text-xs text-slate-500 uppercase font-medium">Payees</p>
+                      <p className="text-2xl font-bold text-slate-700 dark:text-slate-100">{cache.payees?.length || 0}</p>
+                      <p className="text-xs text-slate-500 uppercase font-medium dark:text-slate-400">Payees</p>
+                  </div>
+                  {/* Tags Stat */}
+                  <div className="text-center">
+                      <p className="text-2xl font-bold text-emerald-500 dark:text-emerald-400">
+                          {tagCount}
+                      </p>
+                      <p className="text-xs text-gray-500 uppercase tracking-wide">
+                          Tags
+                      </p>
                   </div>
               </div>
+
+              {(lastSync || fileDate) && (
+                <div className="mt-4 pt-3 border-t border-gray-100 dark:border-gray-800">
+                    <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400">
+                    <span>Synced:</span>
+                    <span className="font-mono">{lastSync ? new Date(lastSync).toLocaleString() : 'N/A'}</span>
+                    </div>
+                    <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400 mt-1">
+                    <span>File Date:</span>
+                    <span className="font-mono">{fileDate ? new Date(parseInt(fileDate)).toLocaleString() : 'N/A'}</span>
+                    </div>
+                </div>
+              )}
           </CardContent>
       </Card>
 
       {/* Defaults Section */}
       <Card>
           <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                  <Tag className="h-5 w-5 text-brand-600" />
-                  Defaults
+              <CardTitle className="flex items-center gap-2 dark:text-slate-100">
+                  <Tag className="h-5 w-5 text-brand-600 dark:text-brand-400" />
+                  App & Defaults
               </CardTitle>
-              <CardDescription>
-                  Configure default values for new transactions.
+              <CardDescription className="dark:text-slate-400">
+                  Configure appearance and default values.
               </CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="space-y-4">
+               {/* Theme Selector */}
                <div className="space-y-2">
-                  <Label>Default Tag</Label>
+                   <Label className="dark:text-slate-200">App Theme</Label>
+                   <select
+                      name="theme"
+                      value={settings.theme}
+                      onChange={handleSettingChange}
+                      className="w-full h-10 px-3 rounded-md border border-slate-300 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 dark:bg-slate-950 dark:border-slate-800 dark:text-slate-100"
+                   >
+                      <option value="system">System Default</option>
+                      <option value="light">Light Mode</option>
+                      <option value="dark">Dark Mode</option>
+                   </select>
+               </div>
+
+               {/* Default Category */}
+               <div className="space-y-2">
+                   <Label className="dark:text-slate-200">Default Category</Label>
+                   <div className="relative">
+                        <Input
+                            type="text"
+                            name="defaultCategory"
+                            value={settings.defaultCategory}
+                            onChange={handleSettingChange}
+                            list="settings-category-list"
+                            placeholder="Select default category"
+                            className="dark:text-slate-100"
+                        />
+                        <datalist id="settings-category-list">
+                            {cache.categories && cache.categories.map(cat => (
+                                <option key={cat} value={cat} />
+                            ))}
+                        </datalist>
+                   </div>
+                   <p className="text-xs text-slate-500 dark:text-slate-400">Used for new transactions and as a fallback for AI scans.</p>
+               </div>
+
+               <div className="space-y-2">
+                  <Label className="dark:text-slate-200">Default Tag</Label>
                   <Input
                       type="text"
                       name="defaultTag"
                       value={settings.defaultTag || ''}
                       onChange={handleSettingChange}
                       placeholder="e.g. mobile-import"
+                      className="dark:text-slate-100"
                   />
-                  <p className="text-xs text-slate-500">This tag will be automatically added to every new transaction.</p>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">This tag will be automatically added to every new transaction.</p>
+               </div>
+
+               <div className="space-y-2">
+                  <Label className="flex items-center gap-2 dark:text-slate-200">
+                      <Calendar className="h-4 w-4" />
+                      Receipt Date Format
+                  </Label>
+                  <select
+                      name="dateFormat"
+                      value={localStorage.getItem('hb_date_format') || 'DD/MM/YYYY'}
+                      onChange={(e) => {
+                          localStorage.setItem('hb_date_format', e.target.value);
+                          // Force re-render (hacky but works for simple local storage)
+                          setSettings({ ...settings });
+                      }}
+                      className="w-full h-10 px-3 rounded-md border border-slate-300 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 dark:bg-slate-950 dark:border-slate-800 dark:text-slate-100"
+                  >
+                      <option value="DD/MM/YYYY">DD/MM/YYYY (International/UK/SG)</option>
+                      <option value="MM/DD/YYYY">MM/DD/YYYY (US)</option>
+                      <option value="YYYY-MM-DD">YYYY-MM-DD (ISO)</option>
+                  </select>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">Helps AI correctly interpret ambiguous dates (e.g. 10/01).</p>
                </div>
           </CardContent>
       </Card>
@@ -301,6 +434,42 @@ function Settings() {
               </Button>
           </CardContent>
       </Card>
+
+      {/* About Footer */}
+      <footer className="mt-12 py-8 text-center space-y-4 border-t border-gray-100 dark:border-gray-800">
+        {/* Brand & Version */}
+        <div>
+          <h3 className="text-sm font-semibold text-gray-900 dark:text-white">HB Go</h3>
+          <p className="text-xs text-gray-500">v{__APP_VERSION__} • Offline PWA</p>
+        </div>
+
+        <div className="text-xs text-gray-500">
+           Unofficial companion to <a href="http://homebank.free.fr/" target="_blank" rel="noreferrer" className="text-blue-500 hover:underline">HomeBank</a>.
+        </div>
+
+        {/* Developer Credits */}
+        <div className="text-xs text-gray-500 dark:text-gray-400 space-y-1">
+          <p>Built with 🤖 & ❤️ by <span className="font-semibold text-gray-900 dark:text-white">Lawrance Koh</span>.</p>
+          <p className="italic">"A HomeBank user since March 2025."</p>
+        </div>
+
+        {/* Action Links */}
+        <div className="flex justify-center gap-4 text-sm font-medium pt-2">
+          <a href="https://www.linkedin.com/in/lawrancekoh" target="_blank" rel="noreferrer" className="text-blue-600 hover:underline">
+            LinkedIn
+          </a>
+          <span className="text-gray-300 dark:text-gray-600">|</span>
+          <a href="https://paypal.me/lawrancekoh" target="_blank" rel="noreferrer" className="flex items-center gap-1 text-amber-500 hover:underline">
+            <Coffee className="h-3 w-3" />
+            Support
+          </a>
+          <span className="text-gray-300 dark:text-gray-600">|</span>
+          <a href="https://github.com/lawrancekoh/hb-go" target="_blank" rel="noreferrer" className="flex items-center gap-1 text-gray-600 dark:text-gray-400 hover:underline">
+            <Github className="h-3 w-3" />
+            Source
+          </a>
+        </div>
+      </footer>
 
     </div>
   );

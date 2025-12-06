@@ -18,7 +18,10 @@ export const csvService = {
       // Memo: Add time if available
       let memo = t.memo || '';
       if (t.time) {
-        memo = `[${t.time}] ${memo}`;
+        const timeTag = `[${t.time}]`;
+        if (!memo.startsWith(timeTag)) {
+          memo = `${timeTag} ${memo}`;
+        }
       }
 
       // Escape semicolons in fields

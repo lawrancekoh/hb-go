@@ -1,30 +1,27 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
+import { version } from './package.json'
 
 // https://vitejs.dev/config/
 export default defineConfig({
   define: {
-    Module: {}
+    Module: {},
+    '__APP_VERSION__': JSON.stringify(version),
   },
   plugins: [
     react(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.svg', 'robots.txt', 'icons/*.png'],
-      workbox: {
-        maximumFileSizeToCacheInBytes: 5000000, // 5MB to accommodate PaddleOCR
-      },
+      includeAssets: ['favicon.png', 'robots.txt', 'icons/*.png'],
       manifest: {
         name: 'HB Go',
         short_name: 'HB Go',
-        description: 'Scan. Tag. Export.',
-        theme_color: '#2563EB',
+        description: 'The Intelligent, Offline-First Companion for HomeBank',
+        theme_color: '#3b82f6',
         background_color: '#ffffff',
         display: 'standalone',
         orientation: 'portrait',
-        start_url: '/hb-go/',
-        scope: '/hb-go/',
         icons: [
           {
             src: 'icons/icon-192.png',

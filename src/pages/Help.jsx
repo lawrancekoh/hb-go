@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { Card, CardHeader, CardTitle, CardContent } from '../components/ui/Card';
-import { ArrowLeft, BookOpen, Upload, Camera, Download, Smartphone, ShieldCheck, Sparkles } from 'lucide-react';
+import { ArrowLeft, BookOpen, Upload, Camera, Download, Smartphone, ShieldCheck, Sparkles, Key } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 
 function Help() {
@@ -10,7 +10,7 @@ function Help() {
         <Button variant="ghost" size="icon" href="/" aria-label="Back to Home">
             <ArrowLeft className="h-5 w-5" />
         </Button>
-        <h1 className="text-2xl font-bold text-slate-900">How to Use</h1>
+        <h1 className="text-2xl font-bold text-slate-900 dark:text-white">How to Use</h1>
       </div>
 
       <div className="grid gap-6">
@@ -21,21 +21,78 @@ function Help() {
                     Pro Tips
                 </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-3 text-slate-600">
-                <ul className="list-disc list-inside space-y-2">
-                    <li>
-                        <strong>AI Setup:</strong> Go to Settings to add an OpenAI/Gemini key for super-accurate scanning.
-                    </li>
-                    <li>
-                        <strong>Cropping:</strong> Crop your image tightly around the text to remove table backgrounds and improve results.
-                    </li>
-                    <li>
-                        <strong>Tagging:</strong> Search <code>tag:mobile-import</code> in HomeBank to find transactions added via this app.
-                    </li>
-                    <li>
-                        <strong>Automation:</strong> Set up 'Assignments' in HomeBank Desktop to automate categories based on Payee names.
-                    </li>
-                </ul>
+            <CardContent className="space-y-6 text-slate-600 dark:text-gray-300">
+                <div>
+                    <h3 className="font-semibold text-slate-900 dark:text-white mb-2">App Features</h3>
+                    <ul className="list-disc list-inside space-y-2">
+                        <li>
+                            <strong>AI Setup:</strong> Go to Settings to add an OpenAI/Gemini key for super-accurate scanning.
+                        </li>
+                        <li>
+                            <strong>No Receipt? No Problem:</strong> Snap a photo of the item itself (like a coffee cup or parking meter). The AI will describe the item and guess the category.
+                        </li>
+                        <li>
+                            <strong>Cropping:</strong> Crop your image tightly around the text to remove table backgrounds and improve results.
+                        </li>
+                        <li>
+                            <strong>Pro Mode:</strong> Set a 'Default Category' in Settings (e.g., Dining Out) to skip a step for your most frequent purchases.
+                        </li>
+                    </ul>
+                </div>
+
+                <div>
+                    <h3 className="font-semibold text-slate-900 dark:text-white mb-2">Desktop Workflow</h3>
+                    <p className="text-sm mb-3">
+                        Don't have the desktop app? <a href="http://homebank.free.fr/" target="_blank" rel="noreferrer" className="text-brand-600 dark:text-brand-400 font-medium hover:underline">Download HomeBank</a>.
+                    </p>
+                    <ul className="list-disc list-inside space-y-2">
+                        <li>
+                            <strong>Chronological Order:</strong> We save the time <code>[HH:MM]</code> to the Memo. In HomeBank, sort by the Memo column to see your day's spending in exact order.
+                        </li>
+                        <li>
+                            <strong>Handling Splits:</strong> Need to split a bill? Capture the Total Amount here. In HomeBank Desktop, simply click 'Split' on the transaction to divide it into multiple categories.
+                        </li>
+                        <li>
+                            <strong>Tagging:</strong> Search <code>tag:mobile-import</code> in HomeBank to find transactions added via this app.
+                        </li>
+                        <li>
+                            <strong>Automation:</strong> Set up 'Assignments' in HomeBank Desktop to automate categories based on Payee names.
+                        </li>
+                    </ul>
+                </div>
+            </CardContent>
+        </Card>
+
+        <Card>
+            <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                    <Key className="h-5 w-5 text-brand-600" />
+                    How to get an AI Key
+                </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4 text-slate-600 dark:text-gray-300">
+                <p>To unlock smart scanning, you need a key from an AI provider. Your key is stored locally on your device.</p>
+
+                <div>
+                    <h3 className="font-semibold text-slate-900 dark:text-white mb-2">Google Gemini (Recommended - Free Option)</h3>
+                    <ol className="list-decimal list-inside space-y-1">
+                        <li>Go to <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noreferrer" className="text-brand-600 dark:text-brand-400 hover:underline">Google AI Studio</a>.</li>
+                        <li>Sign in with your Google account.</li>
+                        <li>Click <strong>"Create API Key"</strong>.</li>
+                        <li>Copy the key and paste it into HB Go settings.</li>
+                    </ol>
+                    <p className="text-sm italic mt-2 text-slate-500">Tip: The free tier is usually sufficient for personal receipt scanning.</p>
+                </div>
+
+                <div>
+                    <h3 className="font-semibold text-slate-900 dark:text-white mb-2">OpenAI (Paid Option)</h3>
+                    <ol className="list-decimal list-inside space-y-1">
+                        <li>Go to <a href="https://platform.openai.com/api-keys" target="_blank" rel="noreferrer" className="text-brand-600 dark:text-brand-400 hover:underline">OpenAI Platform</a>.</li>
+                        <li>Sign up and add a payment method (Pre-paid credits are usually required).</li>
+                        <li>Click <strong>"Create new secret key"</strong>.</li>
+                        <li>Copy and paste it here.</li>
+                    </ol>
+                </div>
             </CardContent>
         </Card>
 
@@ -46,9 +103,9 @@ function Help() {
                     1. Setup
                 </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-2 text-slate-600">
+            <CardContent className="space-y-2 text-slate-600 dark:text-gray-300">
                 <p>
-                    Go to <Link to="/settings" className="text-brand-600 font-medium hover:underline">Settings</Link>.
+                    Go to <Link to="/settings" className="text-brand-600 dark:text-brand-400 font-medium hover:underline">Settings</Link>.
                 </p>
                 <p>
                     Import your HomeBank file (<code>.xhb</code>) to load your existing categories and payees. This makes entry much faster!
@@ -63,7 +120,7 @@ function Help() {
                     2. Capture
                 </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-2 text-slate-600">
+            <CardContent className="space-y-2 text-slate-600 dark:text-gray-300">
                 <p>
                     Tap the <strong>+</strong> button on the home screen.
                 </p>
@@ -80,7 +137,7 @@ function Help() {
                     3. Export
                 </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-2 text-slate-600">
+            <CardContent className="space-y-2 text-slate-600 dark:text-gray-300">
                 <p>
                     When you are ready, tap <strong>Export CSV</strong> on the home screen.
                 </p>
@@ -97,9 +154,9 @@ function Help() {
                     Installation
                 </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4 text-slate-600">
+            <CardContent className="space-y-4 text-slate-600 dark:text-gray-300">
                 <div>
-                  <h3 className="font-semibold text-slate-900 mb-1">iOS (Safari)</h3>
+                  <h3 className="font-semibold text-slate-900 dark:text-white mb-1">iOS (Safari)</h3>
                   <ol className="list-decimal list-inside space-y-1 pl-1">
                     <li>Open app in Safari</li>
                     <li>Tap <strong>Share</strong> (box with arrow)</li>
@@ -107,7 +164,7 @@ function Help() {
                   </ol>
                 </div>
                 <div>
-                  <h3 className="font-semibold text-slate-900 mb-1">Android (Chrome)</h3>
+                  <h3 className="font-semibold text-slate-900 dark:text-white mb-1">Android (Chrome)</h3>
                   <ol className="list-decimal list-inside space-y-1 pl-1">
                     <li>Open app in Chrome</li>
                     <li>Tap <strong>Menu</strong> (three dots)</li>
@@ -124,7 +181,7 @@ function Help() {
                     Privacy
                 </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-2 text-slate-600">
+            <CardContent className="space-y-2 text-slate-600 dark:text-gray-300">
                 <p>
                     <strong>Your data stays on your device.</strong>
                 </p>
@@ -136,6 +193,31 @@ function Help() {
                 </p>
             </CardContent>
         </Card>
+      </div>
+
+      <div className="mt-8 pt-6 border-t border-gray-100 dark:border-gray-800">
+        <h3 className="text-md font-semibold text-slate-900 dark:text-white mb-2">
+            Still need help?
+        </h3>
+        <p className="text-sm text-slate-600 dark:text-gray-400 mb-4">
+            Found a bug or have a feature request? Check out our GitHub or send an email.
+        </p>
+        <div className="flex gap-4">
+            <a
+                href="https://github.com/lawrancekoh/hb-go/issues"
+                target="_blank"
+                rel="noreferrer"
+                className="text-sm font-medium text-emerald-500 hover:text-emerald-600"
+            >
+                Report a Bug →
+            </a>
+            <a
+                href="mailto:lawrancekoh@outlook.com"
+                className="text-sm font-medium text-blue-500 hover:text-blue-600"
+            >
+                Email Developer →
+            </a>
+        </div>
       </div>
     </div>
   );

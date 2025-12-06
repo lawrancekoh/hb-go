@@ -51,7 +51,7 @@ export default function Onboarding({ onComplete }) {
                 <div className="flex justify-center my-6">
                     <img src="/pwa-192x192.png" alt="Logo" className="w-24 h-24 rounded-2xl shadow-lg" onError={(e) => e.target.style.display = 'none'} />
                 </div>
-                <Button onClick={nextStep} className="w-full bg-indigo-600 hover:bg-indigo-700 text-white">
+                <Button onClick={nextStep} className="w-full bg-emerald-500 hover:bg-emerald-600 text-white">
                     Get Started
                 </Button>
             </CardContent>
@@ -66,7 +66,7 @@ export default function Onboarding({ onComplete }) {
         <Card className="max-w-md w-full animate-in fade-in zoom-in duration-300">
             <CardHeader>
                 <CardTitle className="text-xl flex items-center gap-2">
-                    <Database className="w-6 h-6 text-indigo-600" />
+                    <Database className="w-6 h-6 text-brand-600" />
                     Categories Setup
                 </CardTitle>
                 <CardDescription>
@@ -80,7 +80,7 @@ export default function Onboarding({ onComplete }) {
                         type="file"
                         accept=".xhb"
                         onChange={handleFileImport}
-                        className="cursor-pointer file:text-indigo-600 file:font-semibold"
+                        className="cursor-pointer file:text-brand-600 file:font-semibold"
                     />
                     {importStatus && (
                         <p className={`text-sm flex items-center gap-2 ${importStatus.includes('Error') ? 'text-red-600' : 'text-emerald-600'}`}>
@@ -120,7 +120,7 @@ export default function Onboarding({ onComplete }) {
                   </CardDescription>
               </CardHeader>
               <CardContent>
-                  <Button onClick={handleFinish} className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-lg h-12">
+                  <Button onClick={handleFinish} className="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-lg h-12">
                       Start Scanning
                   </Button>
               </CardContent>

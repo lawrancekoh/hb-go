@@ -1,6 +1,7 @@
 import { Link, useLocation } from 'react-router-dom';
-import { Archive, Settings, HelpCircle, FastForward } from 'lucide-react';
+import { Archive, Settings, HelpCircle } from 'lucide-react';
 import { cn } from '../lib/utils';
+import { Logo } from './Branding';
 
 function Layout({ children }) {
   const location = useLocation();
@@ -12,13 +13,13 @@ function Layout({ children }) {
   ];
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col font-sans text-slate-900">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex flex-col font-sans text-slate-900 dark:text-slate-100">
       {/* Header */}
-      <header className="bg-brand-600 text-white shadow-md sticky top-0 z-50">
+      <header className="bg-slate-900 text-white shadow-md sticky top-0 z-50">
         <div className="container mx-auto px-4 h-14 flex justify-between items-center">
           <Link to="/" className="text-xl font-bold flex items-center gap-2 hover:opacity-90 transition-opacity">
-            <FastForward className="h-6 w-6" />
-            <span>HB Go</span>
+            <Logo className="h-8 w-8" />
+            <span className="text-white">HB Go</span>
           </Link>
 
           {/* Desktop Nav */}
@@ -71,21 +72,6 @@ function Layout({ children }) {
         {children}
       </main>
 
-      {/* Footer */}
-      <footer className="bg-slate-100 border-t border-slate-200 py-8 text-center text-slate-500 text-xs space-y-2">
-        <p>HB Go • Offline PWA for <a href="https://www.gethomebank.org/" target="_blank" rel="noopener noreferrer" className="text-brand-600 hover:underline">HomeBank</a></p>
-        <p>
-          Developed by Lawrance Koh • &copy; {new Date().getFullYear()}
-        </p>
-        <p>
-          Contact: <a href="mailto:lawrancekoh@outlook.com?subject=HB-Go%20feedback" className="text-brand-600 hover:underline">lawrancekoh@outlook.com</a>
-        </p>
-        <div className="pt-2">
-          <p>
-            Find this app useful? <a href="https://paypal.me/lawrancekoh" target="_blank" rel="noopener noreferrer" className="text-brand-600 hover:underline font-medium">Buy me a coffee ☕</a>
-          </p>
-        </div>
-      </footer>
     </div>
   );
 }

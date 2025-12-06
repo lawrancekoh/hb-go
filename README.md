@@ -1,21 +1,37 @@
 # HB Go
 
-HB Go is a Progressive Web Application (PWA) designed to capture receipts, parse details using local OCR, and export transactions for HomeBank.
+![Current Version: v1.0.0](https://img.shields.io/badge/Current_Version-v1.0.0-blue)
 
-This application has been tested and is ready for use.
+The Intelligent, Offline-First Companion for HomeBank.
 
-## Developer
-- **Lawrance Koh**
+## Key Features
 
-## HomeBank
-HB Go is a companion app for [HomeBank](https://www.gethomebank.org/), a free software that will assist you to manage your personal accounting.
+*   **Offline-First:** Works completely without internet using PWA caching technology.
+*   **Manual Transaction Entry**: Quickly add transactions on the go.
+*   **HomeBank Integration**: Import `.xhb` files for Categories/Payees and export transactions as CSV.
+*   **BYOK AI Scanning**: Use your own OpenAI or Google Gemini key for smart receipt scanning.
+*   **System-OCR Fallback**: Uses device's native text recognition (Live Text) if AI is not configured.
+*   **Smart Receipt Cropping**: Advanced cropping with rotation and zoom support.
+*   **Smart Auto-Complete**: Intelligent matching for Payees and Categories.
+*   **Onboarding Wizard**: Easy setup for new users.
 
-## Prerequisites
+## Usage Guide
 
-- **Node.js**: v24.11.1 or higher
-- **npm**: v11.6.2 or higher
+1.  **Open App**: Install as PWA on your device.
+2.  **(Optional) Add AI Key**: Go to Settings to configure your OpenAI or Gemini API key for enhanced scanning.
+3.  **Snap Photo**: Tap the camera icon, take a picture of your receipt, crop it, and save.
+4.  **Export CSV**: When ready, export your transactions to CSV and import them into HomeBank on your desktop.
 
-## Getting Started
+## Tech Stack
+
+*   **Vite PWA**: For offline capabilities and progressive web app features.
+*   **React Image Crop**: For advanced image cropping and manipulation.
+*   **React**: UI library.
+*   **Tailwind CSS**: Utility-first CSS framework.
+*   **Tesseract.js**: For local OCR fallback.
+*   **IDB**: For IndexedDB storage.
+
+## Development
 
 1.  **Install Dependencies**:
     ```bash
@@ -32,40 +48,12 @@ HB Go is a companion app for [HomeBank](https://www.gethomebank.org/), a free so
     npm run build
     ```
 
-## Tech Stack
+## 👨‍💻 Why I Built This
+I started my personal finance journey with **HomeBank** in March 2025. I loved the privacy and power of the desktop software, but the "gap" between buying a coffee and sitting at my computer was where my data often got lost.
 
-- React
-- Vite
-- Tailwind CSS
+As an **AI enthusiast**, I realized I could solve this friction. I built **HB Go** to be the missing link—combining the privacy of offline-first software with the intelligence of modern Vision LLMs. I wanted a tool that didn't just take pictures, but actually *understood* the context of my spending.
 
-## Installation on Client Device
-
-HB Go is a web-based application. You can access it via your browser, or install it as an app on your device for a native-like experience.
-
-### iOS (iPhone/iPad)
-1. Open the application URL in **Safari**.
-2. Tap the **Share** button (box with an arrow pointing up).
-3. Scroll down and tap **Add to Home Screen**.
-4. Confirm by tapping **Add**.
-
-### Android
-1. Open the application URL in **Chrome**.
-2. Tap the menu icon (three dots) in the top-right corner.
-3. Tap **Install App** or **Add to Home screen**.
-4. Follow the on-screen prompts to install.
-
-### Desktop (Chrome/Edge)
-1. Open the application URL.
-2. Click the install icon in the address bar (usually on the right side).
-3. Follow the prompts to install the app.
-
-## Usage
-
-1.  **Launch the App**: Open HB Go from your home screen or browser.
-2.  **Capture Receipt**: Use the camera button to take a photo of your receipt, or upload an existing image.
-3.  **Process**: The app will attempt to read the text from the receipt (OCR).
-4.  **Edit Details**: Verify and correct the transaction details (Date, Amount, Payee, Category).
-5.  **Export**: Save the transaction or export it to a format compatible with HomeBank.
+Connect with me on [LinkedIn](https://www.linkedin.com/in/lawrancekoh)!
 
 ## License
 
