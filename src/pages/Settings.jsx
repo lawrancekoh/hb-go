@@ -17,6 +17,7 @@ function Settings() {
       defaultCategory: localStorage.getItem('hb_default_category') || ''
   });
   const [cache, setCache] = useState({ categories: [], payees: [] });
+  const [tagCount, setTagCount] = useState(0);
   const [importStatus, setImportStatus] = useState('');
 
   // AI Config State
@@ -38,6 +39,10 @@ function Settings() {
         });
         setCache(await storageService.getCache());
 
+        // Read hb_tags from localStorage
+        const tags = JSON.parse(localStorage.getItem('hb_tags') || '[]');
+        setTagCount(tags.length);
+
         // Load AI Config from localStorage
         const storedAiConfig = localStorage.getItem('hb_ai_config');
         if (storedAiConfig) {
@@ -57,7 +62,8 @@ function Settings() {
         const parsedData = xhbParser.parse(event.target.result);
         await storageService.saveCache(parsedData);
         setCache(parsedData);
-        setImportStatus(`Success! Loaded ${parsedData.categories.length} categories and ${parsedData.payees.length} payees.`);
+        setTagCount(parsedData.tags ? parsedData.tags.length : 0);
+        setImportStatus(`Success! Loaded ${parsedData.categories.length} categories, ${parsedData.payees.length} payees, and ${parsedData.tags?.length || 0} tags.`);
       } catch (error) {
         console.error(error);
         setImportStatus('Error parsing file.');
@@ -277,7 +283,7 @@ function Settings() {
                   )}
               </div>
 
-              <div className="grid grid-cols-2 gap-4 bg-slate-50 p-4 rounded-lg border border-slate-100 dark:bg-slate-800 dark:border-slate-700">
+              <div className="grid grid-cols-3 gap-4 bg-slate-50 p-4 rounded-lg border border-slate-100 dark:bg-slate-800 dark:border-slate-700">
                   <div className="text-center">
                       <p className="text-2xl font-bold text-slate-700 dark:text-slate-100">{cache.categories?.length || 0}</p>
                       <p className="text-xs text-slate-500 uppercase font-medium dark:text-slate-400">Categories</p>
@@ -285,6 +291,15 @@ function Settings() {
                   <div className="text-center">
                       <p className="text-2xl font-bold text-slate-700 dark:text-slate-100">{cache.payees?.length || 0}</p>
                       <p className="text-xs text-slate-500 uppercase font-medium dark:text-slate-400">Payees</p>
+                  </div>
+                  {/* Tags Stat */}
+                  <div className="text-center">
+                      <p className="text-2xl font-bold text-emerald-500 dark:text-emerald-400">
+                          {tagCount}
+                      </p>
+                      <p className="text-xs text-gray-500 uppercase tracking-wide">
+                          Tags
+                      </p>
                   </div>
               </div>
           </CardContent>
