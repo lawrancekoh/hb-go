@@ -213,7 +213,7 @@ export default function ImageCropper({ imageSrc, onCancel, onConfirm }) {
                     ref={imgRef}
                     src={currentImg}
                     onLoad={onImageLoad}
-                    className="w-full h-auto"
+                    className="max-h-[70vh] w-auto object-contain mx-auto"
                     style={{ display: 'block' }}
                     alt="Receipt"
                 />
