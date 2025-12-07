@@ -38,7 +38,7 @@ async function getCroppedImg(image, crop) {
   const ctx = canvas.getContext('2d');
 
   if (!ctx) {
-      throw new Error('No 2d context');
+    throw new Error('No 2d context');
   }
 
   ctx.drawImage(
@@ -63,28 +63,28 @@ async function getCroppedImg(image, crop) {
 
 // Helper to rotate the source image itself
 async function rotateImageSource(imageSrc, degrees) {
-    const image = await createImage(imageSrc);
-    const canvas = document.createElement('canvas');
-    const ctx = canvas.getContext('2d');
+  const image = await createImage(imageSrc);
+  const canvas = document.createElement('canvas');
+  const ctx = canvas.getContext('2d');
 
-    // Swap dimensions for 90/270
-    if (degrees === 90 || degrees === 270) {
-        canvas.width = image.height;
-        canvas.height = image.width;
-    } else {
-        canvas.width = image.width;
-        canvas.height = image.height;
-    }
+  // Swap dimensions for 90/270
+  if (degrees === 90 || degrees === 270) {
+    canvas.width = image.height;
+    canvas.height = image.width;
+  } else {
+    canvas.width = image.width;
+    canvas.height = image.height;
+  }
 
-    ctx.translate(canvas.width / 2, canvas.height / 2);
-    ctx.rotate((degrees * Math.PI) / 180);
-    ctx.drawImage(image, -image.width / 2, -image.height / 2);
+  ctx.translate(canvas.width / 2, canvas.height / 2);
+  ctx.rotate((degrees * Math.PI) / 180);
+  ctx.drawImage(image, -image.width / 2, -image.height / 2);
 
-    return new Promise((resolve) => {
-        canvas.toBlob((blob) => {
-            resolve(URL.createObjectURL(blob));
-        }, 'image/jpeg');
-    });
+  return new Promise((resolve) => {
+    canvas.toBlob((blob) => {
+      resolve(URL.createObjectURL(blob));
+    }, 'image/jpeg');
+  });
 }
 
 export default function ImageCropper({ imageSrc, onCancel, onConfirm }) {
@@ -138,24 +138,24 @@ export default function ImageCropper({ imageSrc, onCancel, onConfirm }) {
   }
 
   const handleRotate = async () => {
-     if (!currentImg) return;
-     try {
-         const newUrl = await rotateImageSource(currentImg, 90);
-         setCurrentImg(newUrl);
-         // setCrop will happen in onImageLoad
-     } catch (e) {
-         console.error("Rotation failed", e);
-     }
+    if (!currentImg) return;
+    try {
+      const newUrl = await rotateImageSource(currentImg, 90);
+      setCurrentImg(newUrl);
+      // setCrop will happen in onImageLoad
+    } catch (e) {
+      console.error("Rotation failed", e);
+    }
   };
 
   const handleConfirm = async () => {
     if (completedCrop && imgRef.current) {
-        try {
-            const blob = await getCroppedImg(imgRef.current, completedCrop);
-            onConfirm(blob);
-        } catch(e) {
-            console.error(e);
-        }
+      try {
+        const blob = await getCroppedImg(imgRef.current, completedCrop);
+        onConfirm(blob);
+      } catch (e) {
+        console.error(e);
+      }
     }
   };
 
@@ -197,58 +197,58 @@ export default function ImageCropper({ imageSrc, onCancel, onConfirm }) {
         onTouchMove={handleTouchMove}
       >
         {currentImg && (
-            <ReactCrop
-                crop={crop}
-                onChange={(c) => setCrop(c)}
-                onComplete={(c) => setCompletedCrop(c)}
-                keepSelection={true}
-                style={{
-                    width: `${scale * 100}%`,
-                    maxWidth: 'none',
-                    transition: 'width 0.1s ease-out',
-                    flexShrink: 0
-                }}
-            >
-                <img
-                    ref={imgRef}
-                    src={currentImg}
-                    onLoad={onImageLoad}
-                    className="max-h-[70vh] w-auto object-contain mx-auto"
-                    style={{ display: 'block' }}
-                    alt="Receipt"
-                />
-            </ReactCrop>
+          <ReactCrop
+            crop={crop}
+            onChange={(c) => setCrop(c)}
+            onComplete={(c) => setCompletedCrop(c)}
+            keepSelection={true}
+            style={{
+              width: `${scale * 100}%`,
+              maxWidth: 'none',
+              transition: 'width 0.1s ease-out',
+              flexShrink: 0
+            }}
+          >
+            <img
+              ref={imgRef}
+              src={currentImg}
+              onLoad={onImageLoad}
+              className="w-auto object-contain mx-auto"
+              style={{ display: 'block', maxHeight: `${scale * 70}vh` }}
+              alt="Receipt"
+            />
+          </ReactCrop>
         )}
       </div>
 
       {/* Footer */}
       <div className="bg-white p-4 pb-safe flex flex-col gap-4 shrink-0 shadow-up z-10">
-          {/* Zoom Control */}
-          <div className="flex items-center gap-4 px-2">
-            <span className="text-xs text-gray-500 font-medium">Zoom</span>
-            <input
-              type="range"
-              min="1.0"
-              max="3.0"
-              step="0.1"
-              value={scale}
-              onChange={(e) => setScale(parseFloat(e.target.value))}
-              className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-brand-600"
-            />
-          </div>
+        {/* Zoom Control */}
+        <div className="flex items-center gap-4 px-2">
+          <span className="text-xs text-gray-500 font-medium">Zoom</span>
+          <input
+            type="range"
+            min="1.0"
+            max="3.0"
+            step="0.1"
+            value={scale}
+            onChange={(e) => setScale(parseFloat(e.target.value))}
+            className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-brand-600"
+          />
+        </div>
 
-          {/* Action Buttons */}
-          <div className="flex gap-4">
-              <Button variant="outline" className="flex-1 gap-2" onClick={onCancel}>
-                <X className="h-4 w-4" /> Cancel
-              </Button>
-              <Button variant="outline" onClick={handleRotate} title="Rotate 90°">
-                <RotateCw className="h-4 w-4" />
-              </Button>
-              <Button className="flex-1 gap-2 bg-green-600 hover:bg-green-700 text-white" onClick={handleConfirm}>
-                <Check className="h-4 w-4" /> Confirm
-              </Button>
-          </div>
+        {/* Action Buttons */}
+        <div className="flex gap-4">
+          <Button variant="outline" className="flex-1 gap-2" onClick={onCancel}>
+            <X className="h-4 w-4" /> Cancel
+          </Button>
+          <Button variant="outline" onClick={handleRotate} title="Rotate 90°">
+            <RotateCw className="h-4 w-4" />
+          </Button>
+          <Button className="flex-1 gap-2 bg-green-600 hover:bg-green-700 text-white" onClick={handleConfirm}>
+            <Check className="h-4 w-4" /> Confirm
+          </Button>
+        </div>
       </div>
     </div>
   );
