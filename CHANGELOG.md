@@ -1,5 +1,8 @@
 # Changelog
 
+## [1.0.1] - 2025-12-11
+*   Fixed transaction list sorting to be strictly reverse chronological (Newest Date & Time first).
+
 ## [1.0.0] - 2025-12-02
 
 ### 🚀 Features

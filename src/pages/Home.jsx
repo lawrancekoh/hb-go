@@ -13,8 +13,13 @@ function Home() {
 
   const loadTransactions = useCallback(async () => {
     const txs = await storageService.getTransactions();
-    // Sort by date desc
-    txs.sort((a, b) => new Date(b.date) - new Date(a.date));
+    // Sort by date desc, then time desc
+    txs.sort((a, b) => {
+      const dateDiff = new Date(b.date) - new Date(a.date);
+      if (dateDiff !== 0) return dateDiff;
+      // If dates are equal, sort by time descending
+      return (b.time || '').localeCompare(a.time || '');
+    });
     setTransactions(txs);
   }, []);
 
