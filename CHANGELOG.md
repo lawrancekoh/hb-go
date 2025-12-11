@@ -1,7 +1,23 @@
 # Changelog
 
 ## [1.0.1] - 2025-12-11
-*   Fixed transaction list sorting to be strictly reverse chronological (Newest Date & Time first).
+
+### 🚀 Features
+*   **Editor UX:** Added "Clear" buttons to input fields and a "Today" shortcut for the date field.
+*   **Settings:** Now displays App Version, imported file date, sync timestamp, and tag counts.
+*   **Image Cropper:** Major upgrade with improved zoom, rotation support, and better desktop layout.
+*   **Resources:** Added direct links to the official HomeBank website and a new "Support & Feedback" section in Help.
+
+### 🐛 Bug Fixes
+*   Fixed transaction list sorting to be strictly reverse chronological.
+*   Fixed AI date hallucination (now defaults to current date if uncertain).
+*   Fixed duplicate timestamps appearing in CSV export memos.
+*   Fixed category matching precedence to correctly prioritize AI suggestions.
+*   Fixed Image Cropper height constraints on desktop screens.
+
+### 📝 Documentation
+*   Added "How to get an AI Key" guide to the Help page.
+*   Added "Why I Built This" origin story.
 
 ## [1.0.0] - 2025-12-02
 
