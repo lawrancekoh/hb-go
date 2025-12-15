@@ -64,10 +64,13 @@ function Home() {
     const success = await csvService.exportCSV(csv, filename);
 
     if (success) {
-      if (confirm('Export successful! Clear exported transactions?')) {
+      // Small delay to ensure focus returns to the app after share sheet closes (mobile)
+      setTimeout(async () => {
+        if (confirm('Export successful! Clear exported transactions?')) {
           await storageService.clearTransactions();
           loadTransactions();
-      }
+        }
+      }, 500);
     }
   };
 
