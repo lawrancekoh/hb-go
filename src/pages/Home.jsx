@@ -52,6 +52,13 @@ function Home() {
     }
   };
 
+  const handleClearAll = async () => {
+      if (confirm('Are you sure you want to clear ALL pending transactions? This cannot be undone.')) {
+          await storageService.clearTransactions();
+          loadTransactions();
+      }
+  };
+
   const handleExport = async () => {
     if (transactions.length === 0) {
       alert('No transactions to export.');
@@ -62,6 +69,9 @@ function Home() {
 
     // Attempt to share (mobile) or download (desktop)
     const success = await csvService.exportCSV(csv, filename);
+
+    // Short delay to ensure focus returns to app on mobile after share sheet
+    await new Promise(resolve => setTimeout(resolve, 500));
 
     if (success) {
       if (confirm('Export successful! Clear exported transactions?')) {
@@ -92,6 +102,16 @@ function Home() {
                   className="hidden md:inline-flex gap-2 bg-emerald-500 text-white hover:bg-emerald-600 border-0 dark:bg-emerald-600 dark:text-white"
                 >
                   <Plus className="h-4 w-4" /> New Transaction
+                </Button>
+                <Button
+                    variant="secondary"
+                    size="sm"
+                    onClick={handleClearAll}
+                    disabled={transactions.length === 0}
+                    className="bg-white/10 hover:bg-white/20 text-white border-0"
+                    title="Clear All"
+                >
+                    <Trash2 className="h-4 w-4" />
                 </Button>
                 <Button
                   variant="secondary"
