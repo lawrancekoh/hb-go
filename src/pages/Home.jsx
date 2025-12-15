@@ -87,13 +87,13 @@ function Home() {
 
       {/* Summary Card */}
       <Card className="bg-gradient-to-br from-slate-800 to-slate-900 text-white border-none shadow-lg dark:from-slate-800 dark:to-slate-950">
-          <CardContent className="p-6 flex justify-between items-center">
+          <CardContent className="p-6 flex flex-col md:flex-row gap-4 md:gap-0 justify-between items-start md:items-center">
               <div>
                   <p className="text-slate-300 text-sm font-medium">Total Pending</p>
-                  <p className="text-4xl font-bold mt-1 text-emerald-400">${totalAmount.toFixed(2)}</p>
+                  <p className="text-4xl font-bold mt-1 text-emerald-400 break-words">${totalAmount.toFixed(2)}</p>
                   <p className="text-slate-400 text-xs mt-2">{transactions.length} transactions</p>
               </div>
-              <div className="flex gap-2">
+              <div className="flex gap-2 w-full md:w-auto">
                 <Button
                   href="/editor/new"
                   variant="secondary"
