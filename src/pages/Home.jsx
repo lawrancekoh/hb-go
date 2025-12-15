@@ -59,11 +59,15 @@ function Home() {
     }
     const csv = csvService.generateCSV(transactions);
     const filename = `hb-go-export-${new Date().toISOString().slice(0,10)}.csv`;
-    csvService.downloadCSV(csv, filename);
 
-    if (confirm('Export successful! Clear exported transactions?')) {
-        await storageService.clearTransactions();
-        loadTransactions();
+    // Attempt to share (mobile) or download (desktop)
+    const success = await csvService.exportCSV(csv, filename);
+
+    if (success) {
+      if (confirm('Export successful! Clear exported transactions?')) {
+          await storageService.clearTransactions();
+          loadTransactions();
+      }
     }
   };
 

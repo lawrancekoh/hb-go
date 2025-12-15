@@ -3,6 +3,7 @@
 ## [1.0.1] - 2025-12-11
 
 ### 🚀 Features
+*   **Export:** Added Native Share Sheet support (Mobile) for direct save to Drive/OneDrive.
 *   **Editor UX:** Added "Clear" buttons to input fields and a "Today" shortcut for the date field.
 *   **Settings:** Now displays App Version, imported file date, sync timestamp, and tag counts.
 *   **Image Cropper:** Major upgrade with improved zoom, rotation support, and better desktop layout.

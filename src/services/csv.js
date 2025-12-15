@@ -54,5 +54,44 @@ export const csvService = {
       link.click();
       document.body.removeChild(link);
     }
+  },
+
+  /**
+   * Attempts to use the native Web Share API to share the CSV file.
+   * Falls back to classic download if sharing is not supported or fails (excluding user cancellation).
+   * @param {string} csvContent
+   * @param {string} filename
+   * @returns {Promise<boolean>} true if shared/downloaded, false if cancelled by user.
+   */
+  exportCSV: async (csvContent, filename = 'export.csv') => {
+    // Try Web Share API Level 2 (File sharing)
+    try {
+      // Check if the browser supports File constructor and navigator.share
+      if (typeof File !== 'undefined' && navigator.canShare && navigator.share) {
+        const file = new File([csvContent], filename, { type: 'text/csv' });
+
+        // Validate if this specific file can be shared
+        if (navigator.canShare({ files: [file] })) {
+          await navigator.share({
+            files: [file],
+            title: 'HB Go Export',
+            text: 'Exported transactions from HB Go'
+          });
+          return true; // Share successful
+        }
+      }
+    } catch (error) {
+      // If user cancelled the share sheet, return false so we don't clear data
+      if (error.name === 'AbortError') {
+        console.log('Share cancelled by user');
+        return false;
+      }
+      console.warn('Web Share API failed, falling back to download:', error);
+      // Fall through to download logic
+    }
+
+    // Fallback to standard download
+    csvService.downloadCSV(csvContent, filename);
+    return true;
   }
 };
