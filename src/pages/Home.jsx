@@ -2,7 +2,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useState, useEffect, useCallback } from 'react';
 import { storageService } from '../services/storage';
 import { csvService } from '../services/csv';
-import { Camera, Trash2, Download, Tag, Plus, Sparkles } from 'lucide-react';
+import { Camera, Trash2, Download, Tag, Plus, Sparkles, Share2 } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 import { Card, CardContent } from '../components/ui/Card';
 
@@ -52,7 +52,7 @@ function Home() {
     }
   };
 
-  const handleExport = async () => {
+  const processExport = async (actionFn) => {
     if (transactions.length === 0) {
       alert('No transactions to export.');
       return;
@@ -60,8 +60,7 @@ function Home() {
     const csv = csvService.generateCSV(transactions);
     const filename = `hb-go-export-${new Date().toISOString().slice(0,10)}.csv`;
 
-    // Attempt to share (mobile) or download (desktop)
-    const success = await csvService.exportCSV(csv, filename);
+    const success = await actionFn(csv, filename);
 
     if (success) {
       // Small delay to ensure focus returns to the app after share sheet closes (mobile)
@@ -73,6 +72,13 @@ function Home() {
       }, 500);
     }
   };
+
+  const handleShare = () => processExport(csvService.exportCSV);
+
+  const handleDownload = () => processExport(async (csv, fname) => {
+    csvService.downloadCSV(csv, fname);
+    return true;
+  });
 
   const totalAmount = transactions.reduce((sum, t) => sum + parseFloat(t.amount || 0), 0);
 
@@ -99,11 +105,21 @@ function Home() {
                 <Button
                   variant="secondary"
                   size="sm"
-                  onClick={handleExport}
+                  onClick={handleShare}
                   disabled={transactions.length === 0}
                   className="gap-2 bg-white/10 hover:bg-white/20 text-white border-0"
                 >
-                    <Download className="h-4 w-4" /> Export
+                    <Share2 className="h-4 w-4" /> Share
+                </Button>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={handleDownload}
+                  disabled={transactions.length === 0}
+                  className="gap-2 bg-white/10 hover:bg-white/20 text-white border-0"
+                  title="Save to device"
+                >
+                    <Download className="h-4 w-4" /> Save
                 </Button>
               </div>
           </CardContent>
