@@ -80,6 +80,14 @@ function Home() {
     return true;
   });
 
+  const handleClearAll = async () => {
+    if (transactions.length === 0) return;
+    if (confirm('Are you sure you want to delete all transactions? This cannot be undone.')) {
+      await storageService.clearTransactions();
+      loadTransactions();
+    }
+  };
+
   const totalAmount = transactions.reduce((sum, t) => sum + parseFloat(t.amount || 0), 0);
 
   return (
@@ -120,6 +128,16 @@ function Home() {
                   title="Save to device"
                 >
                     <Download className="h-4 w-4" /> Save
+                </Button>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={handleClearAll}
+                  disabled={transactions.length === 0}
+                  className="gap-2 bg-white/10 hover:bg-red-500/50 text-white border-0"
+                  title="Clear all"
+                >
+                    <Trash2 className="h-4 w-4" /> Clear
                 </Button>
               </div>
           </CardContent>
