@@ -199,13 +199,11 @@ export default function ImageCropper({ imageSrc, onCancel, onConfirm }) {
         {currentImg && (
           <ReactCrop
             crop={crop}
-            onChange={(c) => setCrop(c)}
-            onComplete={(c) => setCompletedCrop(c)}
+            onChange={(_, percentCrop) => setCrop(percentCrop)}
+            onComplete={(_, percentCrop) => setCompletedCrop(percentCrop)}
             keepSelection={true}
             style={{
-              width: `${scale * 100}%`,
               maxWidth: 'none',
-              transition: 'width 0.1s ease-out',
               flexShrink: 0
             }}
           >
@@ -213,8 +211,12 @@ export default function ImageCropper({ imageSrc, onCancel, onConfirm }) {
               ref={imgRef}
               src={currentImg}
               onLoad={onImageLoad}
-              className="w-auto object-contain mx-auto"
-              style={{ display: 'block', maxHeight: `${scale * 70}vh` }}
+              className="w-auto object-contain"
+              style={{
+                display: 'block',
+                maxHeight: `${scale * 70}vh`,
+                maxWidth: `calc(${scale * 100}vw - 4rem)`
+              }}
               alt="Receipt"
             />
           </ReactCrop>
