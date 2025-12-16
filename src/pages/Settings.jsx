@@ -14,7 +14,8 @@ function Settings() {
       defaultTag: '',
       ocrProvider: 'auto',
       theme: localStorage.getItem('hb_theme') || 'system',
-      defaultCategory: localStorage.getItem('hb_default_category') || ''
+      defaultCategory: localStorage.getItem('hb_default_category') || '',
+      dateFormat: localStorage.getItem('hb_date_format') || 'DD/MM/YYYY'
   });
   const [cache, setCache] = useState({ categories: [], payees: [] });
   const [tagCount, setTagCount] = useState(0);
@@ -113,6 +114,10 @@ function Settings() {
     // Special handling for Default Category
     else if (name === 'defaultCategory') {
         localStorage.setItem('hb_default_category', value);
+    }
+    // Special handling for Date Format
+    else if (name === 'dateFormat') {
+        localStorage.setItem('hb_date_format', value);
     }
     // Standard Settings
     else {
@@ -400,12 +405,8 @@ function Settings() {
                   </Label>
                   <select
                       name="dateFormat"
-                      value={localStorage.getItem('hb_date_format') || 'DD/MM/YYYY'}
-                      onChange={(e) => {
-                          localStorage.setItem('hb_date_format', e.target.value);
-                          // Force re-render (hacky but works for simple local storage)
-                          setSettings({ ...settings });
-                      }}
+                      value={settings.dateFormat}
+                      onChange={handleSettingChange}
                       className="w-full h-10 px-3 rounded-md border border-slate-300 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 dark:bg-slate-950 dark:border-slate-800 dark:text-slate-100"
                   >
                       <option value="DD/MM/YYYY">DD/MM/YYYY (International/UK/SG)</option>
