@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.1.1] - 2025-12-11
+
+### 🚀 New Features
+*   **Local AI Models:** Added support for **Gemma 3 (4B)** 'Elastic' model for enhanced local receipt parsing.
+*   **Authentication:** Added **Hugging Face Token** configuration to enable access to gated models (like Gemma 3 and PaliGemma).
+
+### 🐛 Bug Fixes
+*   Fixed `401 Unauthorized` errors when attempting to download gated models from Hugging Face.
+
 ## [1.1.0] - 2025-12-11
 
 ### 🚀 New Features

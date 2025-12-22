@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { storageService } from '../services/storage';
 import { xhbParser } from '../services/xhbParser';
 import { llmService } from '../services/llm';
-import { Upload, Trash2, Database, Tag, Save, Scan, Sparkles, CheckCircle2, AlertCircle, Calendar, Coffee, Github, Cpu, Cloud, Download, Activity } from 'lucide-react';
+import { Upload, Trash2, Database, Tag, Save, Scan, Sparkles, CheckCircle2, AlertCircle, Calendar, Coffee, Github, Cpu, Cloud, Download, Activity, Key } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { Label } from '../components/ui/Label';
@@ -18,7 +18,8 @@ function Settings() {
       dateFormat: localStorage.getItem('hb_date_format') || 'DD/MM/YYYY',
       ai_preference: 'local',
       local_model_choice: 'onnx-community/PaliGemma-3b-ft-en-receipts-onnx',
-      auto_fallback: true
+      auto_fallback: true,
+      hf_token: ''
   });
   const [cache, setCache] = useState({ categories: [], payees: [] });
   const [tagCount, setTagCount] = useState(0);
@@ -177,17 +178,21 @@ function Settings() {
   const handleDownloadModel = async () => {
       setDownloadProgress({ status: 'downloading', progress: 0, message: 'Starting download...' });
       try {
-          await llmService.loadLocalModel(settings.local_model_choice, (progress) => {
-              if (progress.status === 'progress') {
-                  setDownloadProgress({
-                      status: 'downloading',
-                      progress: progress.progress || 0, // transformers.js sends 0-100 or check docs
-                      message: `Downloading ${progress.file} ...`
-                  });
-              } else if (progress.status === 'ready') {
-                   // Model ready
+          await llmService.loadLocalModel(
+              settings.local_model_choice,
+              settings.hf_token,
+              (progress) => {
+                  if (progress.status === 'progress') {
+                      setDownloadProgress({
+                          status: 'downloading',
+                          progress: progress.progress || 0, // transformers.js sends 0-100 or check docs
+                          message: `Downloading ${progress.file} ...`
+                      });
+                  } else if (progress.status === 'ready') {
+                       // Model ready
+                  }
               }
-          });
+          );
           setDownloadProgress({ status: 'ready', progress: 100, message: 'Model downloaded & ready!' });
       } catch (error) {
           console.error(error);
@@ -285,11 +290,34 @@ function Settings() {
                                     className="w-full h-10 px-3 rounded-md border border-slate-300 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-slate-950 dark:border-slate-800 dark:text-slate-100"
                                 >
                                     <option value="onnx-community/PaliGemma-3b-ft-en-receipts-onnx">PaliGemma 3B (Receipts Tuned) - Default</option>
-                                    <option value="google/gemma-3-4b-it">Gemma 3 4B (Alternative)</option>
+                                    <option value="onnx-community/gemma-3-4b-it">Gemma 3 (4B)</option>
                                 </select>
                             </div>
 
                             <div className="space-y-2">
+                                <Label className="dark:text-slate-200 flex items-center gap-2">
+                                    <Key className="h-4 w-4" />
+                                    Hugging Face Access Token
+                                </Label>
+                                <Input
+                                    type="password"
+                                    name="hf_token"
+                                    value={settings.hf_token || ''}
+                                    onChange={handleSettingChange}
+                                    placeholder="hf_..."
+                                    className="dark:text-slate-100"
+                                />
+                                <div className="flex justify-between items-start">
+                                    <p className="text-xs text-slate-500 dark:text-slate-400">
+                                        Required for Gemma 3 / PaliGemma models. You must also <a href="https://huggingface.co/google/gemma-3-4b-it" target="_blank" rel="noreferrer" className="text-blue-500 hover:underline">accept the model license</a> on Hugging Face.
+                                    </p>
+                                    <a href="https://huggingface.co/settings/tokens" target="_blank" rel="noreferrer" className="text-xs text-indigo-600 hover:underline flex-shrink-0 ml-2 dark:text-indigo-400">
+                                        Get Token
+                                    </a>
+                                </div>
+                            </div>
+
+                            <div className="space-y-2 pt-2">
                                 <Button
                                     onClick={handleDownloadModel}
                                     disabled={downloadProgress.status === 'downloading' || downloadProgress.status === 'ready'}

@@ -40,7 +40,8 @@ export const storageService = {
         defaultTag: 'mobile-import',
         ai_preference: 'local',
         local_model_choice: 'onnx-community/PaliGemma-3b-ft-en-receipts-onnx',
-        auto_fallback: true
+        auto_fallback: true,
+        hf_token: ''
     };
     return { ...defaults, ...(settings || {}) };
   },

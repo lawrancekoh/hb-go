@@ -13,9 +13,13 @@ class LocalProvider {
     static instance = null;
     static modelId = 'onnx-community/PaliGemma-3b-ft-en-receipts-onnx';
 
-    static async getInstance(modelId, progressCallback) {
+    static async getInstance(modelId, hf_token, progressCallback) {
         if (!navigator.gpu) {
             throw new Error('WebGPU is not supported on this device.');
+        }
+
+        if (hf_token) {
+            env.token = hf_token;
         }
 
         if (!this.instance || this.modelId !== modelId) {
@@ -26,14 +30,15 @@ class LocalProvider {
              this.instance = await pipeline('image-to-text', modelId, {
                  device: 'webgpu',
                  dtype: 'fp16', // WebGPU usually requires fp32 or q8. Check model compatibility.
-                 progress_callback: progressCallback
+                 progress_callback: progressCallback,
+                 use_auth_token: hf_token // Explicitly pass token if supported by pipeline options, though env.token handles it globally for some requests
              });
         }
         return this.instance;
     }
 
-    static async scan(imageFile, modelId) {
-        const scanner = await this.getInstance(modelId);
+    static async scan(imageFile, modelId, hf_token) {
+        const scanner = await this.getInstance(modelId, hf_token);
 
         // Convert File to URL or generic input transformers accepts
         const imageUrl = URL.createObjectURL(imageFile);
@@ -82,11 +87,6 @@ export const llmService = {
   async verifyAndFetchModels(provider, apiKey, baseUrl) {
       if (provider === 'local') return []; // Local doesn't fetch models this way
 
-      // ... Existing Cloud Logic ...
-      // (Simplified for brevity, copying from original file but omitting for 'overwrite' approach?
-      //  Wait, I should not delete existing logic. I need to MERGE or rewrite completely.)
-      //  I will rewrite the whole file to include both.
-
       if (!apiKey) throw new Error('API Key is required');
 
       let models = [];
@@ -129,8 +129,8 @@ export const llmService = {
   /**
    * Public method to trigger model download/loading for UI progress
    */
-  async loadLocalModel(modelId, progressCallback) {
-      return await LocalProvider.getInstance(modelId, progressCallback);
+  async loadLocalModel(modelId, hf_token, progressCallback) {
+      return await LocalProvider.getInstance(modelId, hf_token, progressCallback);
   },
 
   /**
@@ -138,7 +138,7 @@ export const llmService = {
    */
   async scanImage(imageFile, config, globalSettings) {
       // config: { provider, apiKey, baseUrl, model } - from Settings 'aiConfig'
-      // globalSettings: { ai_preference, local_model_choice, auto_fallback } - from storage
+      // globalSettings: { ai_preference, local_model_choice, auto_fallback, hf_token } - from storage
 
       const preference = globalSettings?.ai_preference || 'local';
       const useLocal = preference === 'local';
@@ -148,7 +148,11 @@ export const llmService = {
       if (useLocal && canWebGPU) {
           try {
               console.log('Attempting Local Inference...');
-              const result = await LocalProvider.scan(imageFile, globalSettings.local_model_choice);
+              const result = await LocalProvider.scan(
+                  imageFile,
+                  globalSettings.local_model_choice,
+                  globalSettings.hf_token
+              );
               return { ...result, source: 'local' };
           } catch (err) {
               console.warn('Local Inference Failed:', err);
