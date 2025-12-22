@@ -13,6 +13,9 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
+      workbox: {
+        maximumFileSizeToCacheInBytes: 30000000,
+      },
       includeAssets: ['favicon.png', 'robots.txt', 'icons/*.png'],
       manifest: {
         name: 'HB Go',
