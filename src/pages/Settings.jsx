@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { storageService } from '../services/storage';
 import { xhbParser } from '../services/xhbParser';
 import { llmService } from '../services/llm';
+import { MODELS } from '../constants/models';
 import { Upload, Trash2, Database, Tag, Save, Scan, Sparkles, CheckCircle2, AlertCircle, Calendar, Coffee, Github, Cpu, Cloud, Download, Activity, Key } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
@@ -17,9 +18,8 @@ function Settings() {
       defaultCategory: localStorage.getItem('hb_default_category') || '',
       dateFormat: localStorage.getItem('hb_date_format') || 'DD/MM/YYYY',
       ai_preference: 'local',
-      local_model_choice: 'onnx-community/PaliGemma-3b-ft-en-receipts-onnx',
-      auto_fallback: true,
-      hf_token: ''
+      local_model_choice: 'paligemma-3b-onnx',
+      auto_fallback: true
   });
   const [cache, setCache] = useState({ categories: [], payees: [] });
   const [tagCount, setTagCount] = useState(0);
@@ -28,6 +28,7 @@ function Settings() {
   const [fileDate, setFileDate] = useState(localStorage.getItem('hb_file_date'));
   const [hasWebGPU, setHasWebGPU] = useState(false);
   const [downloadProgress, setDownloadProgress] = useState({ status: 'idle', progress: 0, message: '' });
+  const [isModelReady, setIsModelReady] = useState(false);
 
   // AI Config State
   const [aiConfig, setAiConfig] = useState({
@@ -47,8 +48,15 @@ function Settings() {
 
     const loadSettings = async () => {
         const storedSettings = await storageService.getSettings();
+        // If the stored model choice is old (legacy ID), default to new ID
+        let modelChoice = storedSettings.local_model_choice || 'paligemma-3b-onnx';
+        if (modelChoice.includes('/')) {
+             modelChoice = 'paligemma-3b-onnx';
+        }
+
         setSettings({
             ...storedSettings,
+            local_model_choice: modelChoice,
             ocrProvider: storedSettings.ocrProvider || 'auto'
         });
         setCache(await storageService.getCache());
@@ -62,9 +70,22 @@ function Settings() {
         if (storedAiConfig) {
             setAiConfig(JSON.parse(storedAiConfig));
         }
+
+        // Check model status
+        checkModelStatus(modelChoice);
     };
     loadSettings();
   }, []);
+
+  const checkModelStatus = async (modelId) => {
+       const ready = await llmService.checkModelStatus(modelId);
+       setIsModelReady(ready);
+       if (ready) {
+           setDownloadProgress({ status: 'ready', progress: 100, message: 'Model Ready' });
+       } else {
+           setDownloadProgress({ status: 'idle', progress: 0, message: '' });
+       }
+  };
 
   const handleFileImport = (e) => {
     const file = e.target.files[0];
@@ -131,6 +152,13 @@ function Settings() {
     else if (name === 'dateFormat') {
         localStorage.setItem('hb_date_format', newValue);
     }
+    // Special handling for Model Choice
+    else if (name === 'local_model_choice') {
+        await storageService.saveSettings({ ...settings, [name]: newValue });
+        setSettings(prev => ({ ...prev, [name]: newValue }));
+        checkModelStatus(newValue);
+        return; // Early return as we updated state manually
+    }
     // Standard Settings
     else {
         await storageService.saveSettings({ ...settings, [name]: newValue });
@@ -180,20 +208,20 @@ function Settings() {
       try {
           await llmService.loadLocalModel(
               settings.local_model_choice,
-              settings.hf_token,
               (progress) => {
                   if (progress.status === 'progress') {
                       setDownloadProgress({
                           status: 'downloading',
-                          progress: progress.progress || 0, // transformers.js sends 0-100 or check docs
+                          progress: progress.progress || 0,
                           message: `Downloading ${progress.file} ...`
                       });
                   } else if (progress.status === 'ready') {
-                       // Model ready
+                       // Model ready logic handled by completion
                   }
               }
           );
           setDownloadProgress({ status: 'ready', progress: 100, message: 'Model downloaded & ready!' });
+          setIsModelReady(true);
       } catch (error) {
           console.error(error);
           setDownloadProgress({ status: 'error', progress: 0, message: `Error: ${error.message}` });
@@ -289,52 +317,33 @@ function Settings() {
                                     onChange={handleSettingChange}
                                     className="w-full h-10 px-3 rounded-md border border-slate-300 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-slate-950 dark:border-slate-800 dark:text-slate-100"
                                 >
-                                    <option value="onnx-community/PaliGemma-3b-ft-en-receipts-onnx">PaliGemma 3B (Receipts Tuned) - Default</option>
-                                    <option value="onnx-community/gemma-3-4b-it">Gemma 3 (4B)</option>
+                                    {MODELS.map(m => (
+                                      <option key={m.id} value={m.id}>{m.name}</option>
+                                    ))}
                                 </select>
-                            </div>
-
-                            <div className="space-y-2">
-                                <Label className="dark:text-slate-200 flex items-center gap-2">
-                                    <Key className="h-4 w-4" />
-                                    Hugging Face Access Token
-                                </Label>
-                                <Input
-                                    type="password"
-                                    name="hf_token"
-                                    value={settings.hf_token || ''}
-                                    onChange={handleSettingChange}
-                                    placeholder="hf_..."
-                                    className="dark:text-slate-100"
-                                />
-                                <div className="flex justify-between items-start">
-                                    <p className="text-xs text-slate-500 dark:text-slate-400">
-                                        Required for Gemma 3 / PaliGemma models. You must also <a href="https://huggingface.co/google/gemma-3-4b-it" target="_blank" rel="noreferrer" className="text-blue-500 hover:underline">accept the model license</a> on Hugging Face.
-                                    </p>
-                                    <a href="https://huggingface.co/settings/tokens" target="_blank" rel="noreferrer" className="text-xs text-indigo-600 hover:underline flex-shrink-0 ml-2 dark:text-indigo-400">
-                                        Get Token
-                                    </a>
-                                </div>
+                                <p className="text-xs text-slate-500 dark:text-slate-400">
+                                  {MODELS.find(m => m.id === settings.local_model_choice)?.description}
+                                </p>
                             </div>
 
                             <div className="space-y-2 pt-2">
                                 <Button
                                     onClick={handleDownloadModel}
-                                    disabled={downloadProgress.status === 'downloading' || downloadProgress.status === 'ready'}
-                                    className="w-full gap-2 bg-indigo-600 hover:bg-indigo-700 text-white"
+                                    disabled={downloadProgress.status === 'downloading' || isModelReady}
+                                    className={`w-full gap-2 text-white ${isModelReady ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-indigo-600 hover:bg-indigo-700'}`}
                                 >
                                     {downloadProgress.status === 'downloading' ? (
                                         <>
                                             <Activity className="h-4 w-4 animate-spin" />
                                             Downloading...
                                         </>
-                                    ) : downloadProgress.status === 'ready' ? (
+                                    ) : isModelReady ? (
                                         <>
-                                            <CheckCircle2 className="h-4 w-4" /> Model Ready
+                                            <CheckCircle2 className="h-4 w-4" /> Model Ready (Cached)
                                         </>
                                     ) : (
                                         <>
-                                            <Download className="h-4 w-4" /> Download & Activate Model
+                                            <Download className="h-4 w-4" /> Download Model Assets
                                         </>
                                     )}
                                 </Button>

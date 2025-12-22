@@ -23,6 +23,21 @@ The Intelligent, Offline-First Companion for HomeBank.
 3.  **Snap Photo**: Tap the camera icon, take a picture of your receipt, crop it, and save.
 4.  **Export CSV**: When ready, export your transactions to CSV and import them into HomeBank on your desktop.
 
+## 🤖 Local AI Setup
+
+Local AI models are fetched directly from GitHub Releases, ensuring fast downloads and no authentication friction.
+
+### Developer Note: Hosting Custom Models
+To host models for this app:
+1. Create a GitHub Release tagged `models` in your repository.
+2. Upload the ONNX model files as assets.
+3. **Naming Convention:** All files for a model must be prefixed with `[model_id]-`.
+   - Example for model ID `paligemma-3b-onnx`:
+     - `paligemma-3b-onnx-config.json`
+     - `paligemma-3b-onnx-tokenizer.json`
+     - `paligemma-3b-onnx-model_quantized.onnx`
+     - ... (all other required files)
+
 ## Tech Stack
 
 *   **Vite PWA**: For offline capabilities and progressive web app features.

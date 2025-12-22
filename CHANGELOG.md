@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.2] - 2025-12-11
+
+### 🚀 New Features
+*   **Direct Model Downloads:** REMOVED Hugging Face authentication requirement. Models are now fetched directly as static assets from GitHub Releases, eliminating "Unauthorized" errors.
+*   **Settings:** Added "Model Status" check to verify if local models are ready.
+*   **Settings:** Removed "Hugging Face Access Token" field.
+
 ## [1.1.1] - 2025-12-11
 
 ### 🚀 New Features
@@ -44,6 +51,7 @@
 ## [1.0.0] - 2025-12-02
 
 ### 🚀 Features
+*   **Smart Tagging:** Added 'Suggestion Ribbon' for manual entry and 'Strict Whitelist' logic for AI auto-tagging based on imported HomeBank data.
 *   Added Manual Theme Switcher (System/Light/Dark).
 *   Added Default Category preference for faster entry.
 *   Offline-first architecture (PWA).
@@ -54,7 +62,6 @@
 *   Smart Receipt Cropping & Rotation.
 *   Smart Auto-Complete (Payee/Category matching).
 *   CSV Export (HomeBank compatible).
-*   **Smart Tagging:** Added 'Suggestion Ribbon' for manual entry and 'Strict Whitelist' logic for AI auto-tagging based on imported HomeBank data.
 
 ### ✨ UX
 *   Onboarding Wizard for new users.

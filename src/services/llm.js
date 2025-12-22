@@ -4,70 +4,51 @@ import { pipeline, env } from '@huggingface/transformers';
  * Inference Orchestrator for Hybrid AI Vision (Local + Cloud)
  */
 
-// Configure Transformers.js to use WebGPU if available
-// We'll check navigator.gpu at runtime before initializing pipelines
-env.allowLocalModels = false; // We use hosted models from HF Hub by default (cached locally)
+// Configure Transformers.js to use hosted models from GitHub Releases
+env.allowLocalModels = false;
 env.useBrowserCache = true;
+env.allowRemoteModels = true;
+env.remoteHost = 'https://github.com/lawrancekoh/hb-go/releases/download/models/';
+env.remotePathTemplate = '{model}-'; // Maps 'modelId' to 'modelId-' prefix for flat release assets
 
 class LocalProvider {
     static instance = null;
-    static modelId = 'onnx-community/PaliGemma-3b-ft-en-receipts-onnx';
+    static modelId = 'paligemma-3b-onnx';
 
-    static async getInstance(modelId, hf_token, progressCallback) {
+    static async getInstance(modelId, progressCallback) {
         if (!navigator.gpu) {
             throw new Error('WebGPU is not supported on this device.');
-        }
-
-        if (hf_token) {
-            env.token = hf_token;
         }
 
         if (!this.instance || this.modelId !== modelId) {
              this.modelId = modelId;
              // Initialize the pipeline
-             // PaliGemma is an image-text-to-text model, but transformers.js might map it to 'image-to-text' or 'vqa'
-             // usually 'image-to-text' for captioning/OCR-like tasks
              this.instance = await pipeline('image-to-text', modelId, {
                  device: 'webgpu',
-                 dtype: 'fp16', // WebGPU usually requires fp32 or q8. Check model compatibility.
+                 dtype: 'fp16',
                  progress_callback: progressCallback,
-                 use_auth_token: hf_token // Explicitly pass token if supported by pipeline options, though env.token handles it globally for some requests
              });
         }
         return this.instance;
     }
 
-    static async scan(imageFile, modelId, hf_token) {
-        const scanner = await this.getInstance(modelId, hf_token);
+    static async scan(imageFile, modelId) {
+        const scanner = await this.getInstance(modelId);
 
         // Convert File to URL or generic input transformers accepts
         const imageUrl = URL.createObjectURL(imageFile);
 
-        // PaliGemma Prompting: It expects a prompt.
-        // For receipts, we can ask "extract receipt data" or similar depending on the fine-tuning.
-        // The user specified 'onnx-community/PaliGemma-3b-ft-en-receipts-onnx'.
-        // We assume it behaves like a captioner or takes a text prompt.
-        // If it's a VLM, we might need 'image-text-to-text'.
-        // NOTE: transformers.js support for PaliGemma is evolving.
-        // If 'image-to-text' doesn't support the prompt, we might need specific handling.
-        // Standard PaliGemma usage: inputs = processor(text=prompt, images=image, ...)
-
-        // For simplicity in this implementation, we'll try the standard pipeline generation.
-        // If specific prompting is needed, we pass it as argument.
-
-        const PROMPT = "extract receipt data JSON"; // Adjust based on model card instructions
+        const PROMPT = "extract receipt data JSON";
 
         try {
             const result = await scanner(imageUrl, {
                 max_new_tokens: 512,
-                generate_kwargs: { prompt: PROMPT } // Some pipelines accept prompt here
+                generate_kwargs: { prompt: PROMPT }
             });
 
-            // Result is usually [{ generated_text: "..." }]
             let text = result[0]?.generated_text || "";
 
             // Attempt to parse JSON from the text
-            // The model might output raw JSON or wrapped in markdown
             const jsonMatch = text.match(/\{[\s\S]*\}/);
             if (jsonMatch) {
                 return JSON.parse(jsonMatch[0]);
@@ -129,8 +110,31 @@ export const llmService = {
   /**
    * Public method to trigger model download/loading for UI progress
    */
-  async loadLocalModel(modelId, hf_token, progressCallback) {
-      return await LocalProvider.getInstance(modelId, hf_token, progressCallback);
+  async loadLocalModel(modelId, progressCallback) {
+      return await LocalProvider.getInstance(modelId, progressCallback);
+  },
+
+  /**
+   * Check if a model is potentially cached/downloaded
+   * This is a best-effort check using the Cache API
+   */
+  async checkModelStatus(modelId) {
+    if (!('caches' in window)) return false;
+
+    // transform modelId + filename to check
+    // Logic: remoteHost + remotePathTemplate + filename
+    // default file transformers.js always fetches is 'config.json'
+    // with our template: {model}-config.json
+
+    const cacheName = 'transformers-cache';
+    const hasCache = await window.caches.has(cacheName);
+    if (!hasCache) return false;
+
+    const cache = await window.caches.open(cacheName);
+    const targetUrl = `${env.remoteHost}${modelId}-config.json`;
+
+    const match = await cache.match(targetUrl);
+    return !!match;
   },
 
   /**
@@ -138,7 +142,7 @@ export const llmService = {
    */
   async scanImage(imageFile, config, globalSettings) {
       // config: { provider, apiKey, baseUrl, model } - from Settings 'aiConfig'
-      // globalSettings: { ai_preference, local_model_choice, auto_fallback, hf_token } - from storage
+      // globalSettings: { ai_preference, local_model_choice, auto_fallback } - from storage
 
       const preference = globalSettings?.ai_preference || 'local';
       const useLocal = preference === 'local';
@@ -150,8 +154,7 @@ export const llmService = {
               console.log('Attempting Local Inference...');
               const result = await LocalProvider.scan(
                   imageFile,
-                  globalSettings.local_model_choice,
-                  globalSettings.hf_token
+                  globalSettings.local_model_choice
               );
               return { ...result, source: 'local' };
           } catch (err) {
