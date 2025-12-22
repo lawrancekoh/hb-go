@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { storageService } from '../services/storage';
 import { xhbParser } from '../services/xhbParser';
 import { llmService } from '../services/llm';
-import { Upload, Trash2, Database, Tag, Save, Scan, Sparkles, CheckCircle2, AlertCircle, Calendar, Coffee, Github } from 'lucide-react';
+import { Upload, Trash2, Database, Tag, Save, Scan, Sparkles, CheckCircle2, AlertCircle, Calendar, Coffee, Github, Cpu, Cloud, Download, Activity } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { Label } from '../components/ui/Label';
@@ -15,13 +15,18 @@ function Settings() {
       ocrProvider: 'auto',
       theme: localStorage.getItem('hb_theme') || 'system',
       defaultCategory: localStorage.getItem('hb_default_category') || '',
-      dateFormat: localStorage.getItem('hb_date_format') || 'DD/MM/YYYY'
+      dateFormat: localStorage.getItem('hb_date_format') || 'DD/MM/YYYY',
+      ai_preference: 'local',
+      local_model_choice: 'onnx-community/PaliGemma-3b-ft-en-receipts-onnx',
+      auto_fallback: true
   });
   const [cache, setCache] = useState({ categories: [], payees: [] });
   const [tagCount, setTagCount] = useState(0);
   const [importStatus, setImportStatus] = useState('');
   const [lastSync, setLastSync] = useState(localStorage.getItem('hb_last_sync'));
   const [fileDate, setFileDate] = useState(localStorage.getItem('hb_file_date'));
+  const [hasWebGPU, setHasWebGPU] = useState(false);
+  const [downloadProgress, setDownloadProgress] = useState({ status: 'idle', progress: 0, message: '' });
 
   // AI Config State
   const [aiConfig, setAiConfig] = useState({
@@ -34,6 +39,11 @@ function Settings() {
   const [aiStatus, setAiStatus] = useState({ type: '', message: '' });
 
   useEffect(() => {
+    // Check WebGPU support
+    if (navigator.gpu) {
+        setHasWebGPU(true);
+    }
+
     const loadSettings = async () => {
         const storedSettings = await storageService.getSettings();
         setSettings({
@@ -104,27 +114,28 @@ function Settings() {
   };
 
   const handleSettingChange = async (e) => {
-    const { name, value } = e.target;
+    const { name, value, type, checked } = e.target;
+    const newValue = type === 'checkbox' ? checked : value;
 
     // Special handling for Theme
     if (name === 'theme') {
-        localStorage.setItem('hb_theme', value);
+        localStorage.setItem('hb_theme', newValue);
         window.dispatchEvent(new Event('hb_theme_changed'));
     }
     // Special handling for Default Category
     else if (name === 'defaultCategory') {
-        localStorage.setItem('hb_default_category', value);
+        localStorage.setItem('hb_default_category', newValue);
     }
     // Special handling for Date Format
     else if (name === 'dateFormat') {
-        localStorage.setItem('hb_date_format', value);
+        localStorage.setItem('hb_date_format', newValue);
     }
     // Standard Settings
     else {
-        await storageService.saveSettings({ ...settings, [name]: value });
+        await storageService.saveSettings({ ...settings, [name]: newValue });
     }
 
-    setSettings(prev => ({ ...prev, [name]: value }));
+    setSettings(prev => ({ ...prev, [name]: newValue }));
   };
 
   // AI Configuration Handlers
@@ -163,114 +174,275 @@ function Settings() {
       setTimeout(() => setAiStatus({ type: '', message: '' }), 3000);
   };
 
+  const handleDownloadModel = async () => {
+      setDownloadProgress({ status: 'downloading', progress: 0, message: 'Starting download...' });
+      try {
+          await llmService.loadLocalModel(settings.local_model_choice, (progress) => {
+              if (progress.status === 'progress') {
+                  setDownloadProgress({
+                      status: 'downloading',
+                      progress: progress.progress || 0, // transformers.js sends 0-100 or check docs
+                      message: `Downloading ${progress.file} ...`
+                  });
+              } else if (progress.status === 'ready') {
+                   // Model ready
+              }
+          });
+          setDownloadProgress({ status: 'ready', progress: 100, message: 'Model downloaded & ready!' });
+      } catch (error) {
+          console.error(error);
+          setDownloadProgress({ status: 'error', progress: 0, message: `Error: ${error.message}` });
+      }
+  };
+
   return (
     <div className="flex flex-col gap-6 max-w-2xl mx-auto pb-20">
       <div className="flex items-center gap-2 mb-2">
           <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">Settings</h1>
       </div>
 
-      {/* AI Configuration (Experimental) */}
-      <Card className="border-brand-100 bg-brand-50/30 dark:bg-brand-950/20 dark:border-brand-900">
+      {/* Intelligence Section */}
+      <Card className="border-indigo-100 bg-indigo-50/30 dark:bg-indigo-950/20 dark:border-indigo-900">
           <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-brand-900 dark:text-brand-300">
-                  <Sparkles className="h-5 w-5 text-brand-600 dark:text-brand-400" />
-                  AI Configuration (Experimental)
+              <CardTitle className="flex items-center gap-2 text-indigo-900 dark:text-indigo-300">
+                  <Cpu className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
+                  Intelligence (Hybrid AI)
               </CardTitle>
-              <CardDescription className="dark:text-brand-200/70">
-                  Connect your own API key to use advanced AI for receipt scanning.
+              <CardDescription className="dark:text-indigo-200/70">
+                  Choose how your receipts are scanned. Local AI is private and free.
               </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
-              <div className="space-y-2">
-                  <Label className="dark:text-slate-200">Provider</Label>
-                  <select
-                      name="provider"
-                      value={aiConfig.provider}
-                      onChange={handleAiConfigChange}
-                      className="w-full h-10 px-3 rounded-md border border-slate-300 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 dark:bg-slate-950 dark:border-slate-800 dark:text-slate-100"
-                  >
-                      <option value="openai">OpenAI</option>
-                      <option value="gemini">Google Gemini</option>
-                      <option value="custom">Custom (OpenAI Compatible)</option>
-                  </select>
+          <CardContent className="space-y-6">
+
+              {/* Preference Selection */}
+              <div className="space-y-3">
+                  <Label className="dark:text-slate-200">Preferred Processing Mode</Label>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                      <button
+                          onClick={() => handleSettingChange({ target: { name: 'ai_preference', value: 'local' } })}
+                          className={`flex flex-col items-center justify-center p-3 rounded-lg border-2 transition-all ${
+                              settings.ai_preference === 'local'
+                              ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300'
+                              : 'border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800'
+                          }`}
+                      >
+                          <Cpu className="h-6 w-6 mb-2" />
+                          <span className="text-sm font-semibold">Local AI</span>
+                          <span className="text-xs text-center mt-1 opacity-80">Privacy-First</span>
+                      </button>
+
+                      <button
+                          onClick={() => handleSettingChange({ target: { name: 'ai_preference', value: 'cloud' } })}
+                          className={`flex flex-col items-center justify-center p-3 rounded-lg border-2 transition-all ${
+                              settings.ai_preference === 'cloud'
+                              ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300'
+                              : 'border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800'
+                          }`}
+                      >
+                          <Cloud className="h-6 w-6 mb-2" />
+                          <span className="text-sm font-semibold">Cloud AI</span>
+                          <span className="text-xs text-center mt-1 opacity-80">Highest Accuracy</span>
+                      </button>
+
+                      <button
+                          onClick={() => handleSettingChange({ target: { name: 'ai_preference', value: 'none' } })}
+                          className={`flex flex-col items-center justify-center p-3 rounded-lg border-2 transition-all ${
+                              settings.ai_preference === 'none'
+                              ? 'border-slate-500 bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300'
+                              : 'border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800'
+                          }`}
+                      >
+                          <Scan className="h-6 w-6 mb-2" />
+                          <span className="text-sm font-semibold">No AI</span>
+                          <span className="text-xs text-center mt-1 opacity-80">Manual Entry</span>
+                      </button>
+                  </div>
               </div>
 
-              {aiConfig.provider === 'custom' && (
-                  <div className="space-y-2">
-                      <Label className="dark:text-slate-200">Base URL</Label>
-                      <Input
-                          type="text"
-                          name="baseUrl"
-                          value={aiConfig.baseUrl}
-                          onChange={handleAiConfigChange}
-                          placeholder="https://api.example.com/v1"
-                          className="dark:text-slate-100"
-                      />
-                  </div>
-              )}
-
-              <div className="space-y-2">
-                  <div className="flex justify-between items-center">
-                    <Label className="dark:text-slate-200">API Key</Label>
-                    <Link to="/help" className="text-xs text-blue-500 hover:underline cursor-pointer">
-                        Guide: Get a Key
-                    </Link>
-                  </div>
-                  <div className="flex gap-2">
-                      <Input
-                          type="password"
-                          name="apiKey"
-                          value={aiConfig.apiKey}
-                          onChange={handleAiConfigChange}
-                          placeholder="sk-..."
-                          className="flex-1 dark:text-slate-100"
-                      />
-                      <Button
-                          onClick={verifyAiKey}
-                          disabled={!aiConfig.apiKey || aiStatus.type === 'loading'}
-                          variant="outline"
-                      >
-                          {aiStatus.type === 'loading' ? 'Verifying...' : 'Verify Key'}
-                      </Button>
-                  </div>
-                  {aiStatus.message && (
-                      <div className={`flex items-center gap-2 text-sm mt-1 ${
-                          aiStatus.type === 'error' ? 'text-red-600 dark:text-red-400' :
-                          aiStatus.type === 'success' ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-600 dark:text-slate-400'
-                      }`}>
-                          {aiStatus.type === 'error' && <AlertCircle className="h-4 w-4" />}
-                          {aiStatus.type === 'success' && <CheckCircle2 className="h-4 w-4" />}
-                          {aiStatus.message}
+              {/* Local AI Config */}
+              {settings.ai_preference === 'local' && (
+                  <div className="bg-white dark:bg-slate-900 p-4 rounded-md border border-slate-200 dark:border-slate-700 space-y-4">
+                      <div className="flex items-center gap-2 mb-2">
+                           {hasWebGPU ? (
+                               <span className="flex items-center gap-1 text-emerald-600 text-xs font-semibold bg-emerald-50 px-2 py-1 rounded dark:bg-emerald-900/30 dark:text-emerald-400">
+                                   <CheckCircle2 className="h-3 w-3" /> WebGPU Ready
+                               </span>
+                           ) : (
+                               <span className="flex items-center gap-1 text-red-600 text-xs font-semibold bg-red-50 px-2 py-1 rounded dark:bg-red-900/30 dark:text-red-400">
+                                   <AlertCircle className="h-3 w-3" /> WebGPU Not Supported
+                               </span>
+                           )}
                       </div>
-                  )}
-              </div>
 
-              {aiConfig.models.length > 0 && (
-                  <div className="space-y-2">
-                      <Label className="dark:text-slate-200">Model</Label>
-                      <select
-                          name="model"
-                          value={aiConfig.model}
-                          onChange={handleAiConfigChange}
-                          className="w-full h-10 px-3 rounded-md border border-slate-300 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 dark:bg-slate-950 dark:border-slate-800 dark:text-slate-100"
-                      >
-                          {aiConfig.models.map(m => (
-                              <option key={m} value={m}>{m}</option>
-                          ))}
-                      </select>
-                      {/* Model Help Text */}
-                      {aiConfig.provider !== 'custom' && (
-                         <div className="bg-blue-50 text-blue-800 p-3 rounded-md text-sm space-y-1 border border-blue-100 mt-2 dark:bg-blue-950/40 dark:text-blue-200 dark:border-blue-900">
-                            <p>⚠️ <strong>Requirement:</strong> You must choose a <strong>Vision (Multi-modal)</strong> model to scan images.</p>
-                            <p>✅ <strong>Recommended for Speed & Cost:</strong> <code>gemini-1.5-flash</code> (or newer <code>flash-lite</code>), <code>gpt-4o-mini</code>.</p>
-                         </div>
+                      {hasWebGPU ? (
+                          <>
+                            <div className="space-y-2">
+                                <Label className="dark:text-slate-200">Local Model</Label>
+                                <select
+                                    name="local_model_choice"
+                                    value={settings.local_model_choice}
+                                    onChange={handleSettingChange}
+                                    className="w-full h-10 px-3 rounded-md border border-slate-300 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-slate-950 dark:border-slate-800 dark:text-slate-100"
+                                >
+                                    <option value="onnx-community/PaliGemma-3b-ft-en-receipts-onnx">PaliGemma 3B (Receipts Tuned) - Default</option>
+                                    <option value="google/gemma-3-4b-it">Gemma 3 4B (Alternative)</option>
+                                </select>
+                            </div>
+
+                            <div className="space-y-2">
+                                <Button
+                                    onClick={handleDownloadModel}
+                                    disabled={downloadProgress.status === 'downloading' || downloadProgress.status === 'ready'}
+                                    className="w-full gap-2 bg-indigo-600 hover:bg-indigo-700 text-white"
+                                >
+                                    {downloadProgress.status === 'downloading' ? (
+                                        <>
+                                            <Activity className="h-4 w-4 animate-spin" />
+                                            Downloading...
+                                        </>
+                                    ) : downloadProgress.status === 'ready' ? (
+                                        <>
+                                            <CheckCircle2 className="h-4 w-4" /> Model Ready
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Download className="h-4 w-4" /> Download & Activate Model
+                                        </>
+                                    )}
+                                </Button>
+                                {downloadProgress.message && (
+                                    <p className="text-xs text-slate-500 text-center">{downloadProgress.message}</p>
+                                )}
+                                {downloadProgress.status === 'downloading' && (
+                                    <div className="w-full bg-slate-200 rounded-full h-2.5 dark:bg-slate-700">
+                                        <div className="bg-indigo-600 h-2.5 rounded-full" style={{ width: `${downloadProgress.progress}%` }}></div>
+                                    </div>
+                                )}
+                            </div>
+
+                            <div className="flex items-center gap-2 pt-2">
+                                <input
+                                    type="checkbox"
+                                    name="auto_fallback"
+                                    id="auto_fallback"
+                                    checked={settings.auto_fallback}
+                                    onChange={handleSettingChange}
+                                    className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+                                />
+                                <Label htmlFor="auto_fallback" className="text-sm dark:text-slate-300">
+                                    Auto-fallback to Cloud AI if Local fails
+                                </Label>
+                            </div>
+                          </>
+                      ) : (
+                          <p className="text-sm text-red-600 dark:text-red-400">
+                              Your device/browser does not support WebGPU. Local AI is unavailable. Please use Cloud AI.
+                          </p>
                       )}
                   </div>
               )}
 
-              <Button onClick={saveAiConfig} className="w-full gap-2 bg-brand-600 hover:bg-brand-700 text-white dark:bg-brand-700 dark:hover:bg-brand-600">
-                  <Save className="h-4 w-4" /> Save AI Configuration
-              </Button>
+              {/* Cloud AI Config (Visible if Cloud Preferred OR Fallback Enabled) */}
+              {(settings.ai_preference === 'cloud' || (settings.ai_preference === 'local' && settings.auto_fallback)) && (
+                  <div className={`space-y-4 pt-4 border-t border-dashed ${settings.ai_preference === 'local' ? 'border-slate-200 dark:border-slate-700' : 'border-transparent'}`}>
+                      {settings.ai_preference === 'local' && (
+                          <div className="flex items-center gap-2 text-sm text-slate-500 font-medium">
+                              <Cloud className="h-4 w-4" /> Cloud Fallback Configuration
+                          </div>
+                      )}
+
+                      <div className="space-y-2">
+                          <Label className="dark:text-slate-200">Provider</Label>
+                          <select
+                              name="provider"
+                              value={aiConfig.provider}
+                              onChange={handleAiConfigChange}
+                              className="w-full h-10 px-3 rounded-md border border-slate-300 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 dark:bg-slate-950 dark:border-slate-800 dark:text-slate-100"
+                          >
+                              <option value="openai">OpenAI</option>
+                              <option value="gemini">Google Gemini</option>
+                              <option value="custom">Custom (OpenAI Compatible)</option>
+                          </select>
+                      </div>
+
+                      {aiConfig.provider === 'custom' && (
+                          <div className="space-y-2">
+                              <Label className="dark:text-slate-200">Base URL</Label>
+                              <Input
+                                  type="text"
+                                  name="baseUrl"
+                                  value={aiConfig.baseUrl}
+                                  onChange={handleAiConfigChange}
+                                  placeholder="https://api.example.com/v1"
+                                  className="dark:text-slate-100"
+                              />
+                          </div>
+                      )}
+
+                      <div className="space-y-2">
+                          <div className="flex justify-between items-center">
+                            <Label className="dark:text-slate-200">API Key</Label>
+                            <Link to="/help" className="text-xs text-blue-500 hover:underline cursor-pointer">
+                                Guide: Get a Key
+                            </Link>
+                          </div>
+                          <div className="flex gap-2">
+                              <Input
+                                  type="password"
+                                  name="apiKey"
+                                  value={aiConfig.apiKey}
+                                  onChange={handleAiConfigChange}
+                                  placeholder="sk-..."
+                                  className="flex-1 dark:text-slate-100"
+                              />
+                              <Button
+                                  onClick={verifyAiKey}
+                                  disabled={!aiConfig.apiKey || aiStatus.type === 'loading'}
+                                  variant="outline"
+                              >
+                                  {aiStatus.type === 'loading' ? 'Verifying...' : 'Verify Key'}
+                              </Button>
+                          </div>
+                          {aiStatus.message && (
+                              <div className={`flex items-center gap-2 text-sm mt-1 ${
+                                  aiStatus.type === 'error' ? 'text-red-600 dark:text-red-400' :
+                                  aiStatus.type === 'success' ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-600 dark:text-slate-400'
+                              }`}>
+                                  {aiStatus.type === 'error' && <AlertCircle className="h-4 w-4" />}
+                                  {aiStatus.type === 'success' && <CheckCircle2 className="h-4 w-4" />}
+                                  {aiStatus.message}
+                              </div>
+                          )}
+                      </div>
+
+                      {aiConfig.models.length > 0 && (
+                          <div className="space-y-2">
+                              <Label className="dark:text-slate-200">Model</Label>
+                              <select
+                                  name="model"
+                                  value={aiConfig.model}
+                                  onChange={handleAiConfigChange}
+                                  className="w-full h-10 px-3 rounded-md border border-slate-300 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 dark:bg-slate-950 dark:border-slate-800 dark:text-slate-100"
+                              >
+                                  {aiConfig.models.map(m => (
+                                      <option key={m} value={m}>{m}</option>
+                                  ))}
+                              </select>
+                              {/* Model Help Text */}
+                              {aiConfig.provider !== 'custom' && (
+                                <div className="bg-blue-50 text-blue-800 p-3 rounded-md text-sm space-y-1 border border-blue-100 mt-2 dark:bg-blue-950/40 dark:text-blue-200 dark:border-blue-900">
+                                    <p>⚠️ <strong>Requirement:</strong> You must choose a <strong>Vision (Multi-modal)</strong> model to scan images.</p>
+                                    <p>✅ <strong>Recommended:</strong> <code>gemini-1.5-flash</code>, <code>gpt-4o-mini</code>.</p>
+                                </div>
+                              )}
+                          </div>
+                      )}
+
+                      <Button onClick={saveAiConfig} className="w-full gap-2 bg-slate-800 hover:bg-slate-900 text-white dark:bg-slate-700 dark:hover:bg-slate-600">
+                          <Save className="h-4 w-4" /> Save Cloud Config
+                      </Button>
+                  </div>
+              )}
           </CardContent>
       </Card>
 

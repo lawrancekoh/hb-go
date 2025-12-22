@@ -1,7 +1,7 @@
 {
   "name": "hb-go",
   "private": true,
-  "version": "1.0.1",
+  "version": "1.1.0",
   "description": "Offline-first receipt scanner and companion app for HomeBank.",
   "license": "MIT",
   "type": "module",
@@ -13,6 +13,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@huggingface/transformers": "^3.8.1",
     "clsx": "^2.1.1",
     "idb": "^8.0.3",
     "lucide-react": "^0.555.0",
