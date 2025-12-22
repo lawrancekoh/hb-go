@@ -36,7 +36,13 @@ export const storageService = {
 
   getSettings: async () => {
     const settings = await (await dbPromise).get(STORE_SETTINGS, 'user_settings');
-    return settings || { defaultTag: 'mobile-import' };
+    const defaults = {
+        defaultTag: 'mobile-import',
+        ai_preference: 'local',
+        local_model_choice: 'onnx-community/PaliGemma-3b-ft-en-receipts-onnx',
+        auto_fallback: true
+    };
+    return { ...defaults, ...(settings || {}) };
   },
 
   saveSettings: async (settings) => {

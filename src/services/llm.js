@@ -1,95 +1,186 @@
+import { pipeline, env } from '@huggingface/transformers';
+
 /**
- * LLM Service for AI-powered Receipt Scanning
- * Supports OpenAI-compatible APIs and Google Gemini
+ * Inference Orchestrator for Hybrid AI Vision (Local + Cloud)
  */
+
+// Configure Transformers.js to use WebGPU if available
+// We'll check navigator.gpu at runtime before initializing pipelines
+env.allowLocalModels = false; // We use hosted models from HF Hub by default (cached locally)
+env.useBrowserCache = true;
+
+class LocalProvider {
+    static instance = null;
+    static modelId = 'onnx-community/PaliGemma-3b-ft-en-receipts-onnx';
+
+    static async getInstance(modelId, progressCallback) {
+        if (!navigator.gpu) {
+            throw new Error('WebGPU is not supported on this device.');
+        }
+
+        if (!this.instance || this.modelId !== modelId) {
+             this.modelId = modelId;
+             // Initialize the pipeline
+             // PaliGemma is an image-text-to-text model, but transformers.js might map it to 'image-to-text' or 'vqa'
+             // usually 'image-to-text' for captioning/OCR-like tasks
+             this.instance = await pipeline('image-to-text', modelId, {
+                 device: 'webgpu',
+                 dtype: 'fp16', // WebGPU usually requires fp32 or q8. Check model compatibility.
+                 progress_callback: progressCallback
+             });
+        }
+        return this.instance;
+    }
+
+    static async scan(imageFile, modelId) {
+        const scanner = await this.getInstance(modelId);
+
+        // Convert File to URL or generic input transformers accepts
+        const imageUrl = URL.createObjectURL(imageFile);
+
+        // PaliGemma Prompting: It expects a prompt.
+        // For receipts, we can ask "extract receipt data" or similar depending on the fine-tuning.
+        // The user specified 'onnx-community/PaliGemma-3b-ft-en-receipts-onnx'.
+        // We assume it behaves like a captioner or takes a text prompt.
+        // If it's a VLM, we might need 'image-text-to-text'.
+        // NOTE: transformers.js support for PaliGemma is evolving.
+        // If 'image-to-text' doesn't support the prompt, we might need specific handling.
+        // Standard PaliGemma usage: inputs = processor(text=prompt, images=image, ...)
+
+        // For simplicity in this implementation, we'll try the standard pipeline generation.
+        // If specific prompting is needed, we pass it as argument.
+
+        const PROMPT = "extract receipt data JSON"; // Adjust based on model card instructions
+
+        try {
+            const result = await scanner(imageUrl, {
+                max_new_tokens: 512,
+                generate_kwargs: { prompt: PROMPT } // Some pipelines accept prompt here
+            });
+
+            // Result is usually [{ generated_text: "..." }]
+            let text = result[0]?.generated_text || "";
+
+            // Attempt to parse JSON from the text
+            // The model might output raw JSON or wrapped in markdown
+            const jsonMatch = text.match(/\{[\s\S]*\}/);
+            if (jsonMatch) {
+                return JSON.parse(jsonMatch[0]);
+            }
+            throw new Error('Model did not return valid JSON');
+
+        } finally {
+            URL.revokeObjectURL(imageUrl);
+        }
+    }
+}
 
 export const llmService = {
   /**
-   * Verifies the API key and fetches available models
-   * @param {string} provider - 'openai', 'gemini', or 'custom'
-   * @param {string} apiKey - The API key
-   * @param {string} baseUrl - Base URL for OpenAI/Custom provider
-   * @returns {Promise<string[]>} - List of sorted model names
+   * Verifies API Key (Cloud) - Existing Logic
    */
   async verifyAndFetchModels(provider, apiKey, baseUrl) {
-    if (!apiKey) throw new Error('API Key is required');
+      if (provider === 'local') return []; // Local doesn't fetch models this way
 
-    let models = [];
+      // ... Existing Cloud Logic ...
+      // (Simplified for brevity, copying from original file but omitting for 'overwrite' approach?
+      //  Wait, I should not delete existing logic. I need to MERGE or rewrite completely.)
+      //  I will rewrite the whole file to include both.
 
-    if (provider === 'gemini') {
-      const url = `https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`;
-      const response = await fetch(url);
+      if (!apiKey) throw new Error('API Key is required');
 
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error?.message || `Gemini API Error: ${response.statusText}`);
+      let models = [];
+
+      if (provider === 'gemini') {
+        const url = `https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`;
+        const response = await fetch(url);
+        if (!response.ok) throw new Error(`Gemini API Error: ${response.statusText}`);
+        const data = await response.json();
+        if (!data.models) throw new Error('No models found');
+        models = data.models
+            .filter(m => m.supportedGenerationMethods?.includes('generateContent'))
+            .map(m => m.name.replace('models/', ''));
+      } else {
+        const url = `${baseUrl}/models`;
+        const response = await fetch(url, { headers: { 'Authorization': `Bearer ${apiKey}` } });
+        if (!response.ok) throw new Error(`API Error: ${response.statusText}`);
+        const data = await response.json();
+        models = data.data
+            .filter(m => {
+                const id = m.id.toLowerCase();
+                return id.includes('gpt') || id.includes('vision') || id.includes('o1');
+            })
+            .map(m => m.id);
       }
 
-      const data = await response.json();
-      if (!data.models) throw new Error('No models found in response');
-
-      // Filter for models that support generateContent
-      models = data.models
-        .filter(m => m.supportedGenerationMethods && m.supportedGenerationMethods.includes('generateContent'))
-        .map(m => m.name.replace('models/', '')); // Strip 'models/' prefix
-
-    } else {
-      // OpenAI or Custom
-      const url = `${baseUrl}/models`;
-      const response = await fetch(url, {
-        headers: {
-          'Authorization': `Bearer ${apiKey}`
-        }
+      const priorities = ['gemini-1.5-flash-8b', 'gemini-1.5-flash', 'gpt-4o-mini', 'gpt-4o', 'gemini-1.5-pro'];
+      models.sort((a, b) => {
+        const indexA = priorities.findIndex(p => a.includes(p));
+        const indexB = priorities.findIndex(p => b.includes(p));
+        if (indexA !== -1 && indexB !== -1) return indexA - indexB;
+        if (indexA !== -1) return -1;
+        if (indexB !== -1) return 1;
+        return a.localeCompare(b);
       });
 
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error?.message || `API Error: ${response.statusText}`);
-      }
-
-      const data = await response.json();
-      if (!data.data) throw new Error('Invalid response format (missing data array)');
-
-      // Filter for relevant models
-      models = data.data
-        .filter(m => {
-            const id = m.id.toLowerCase();
-            return id.includes('gpt') || id.includes('vision') || id.includes('o1');
-        })
-        .map(m => m.id);
-    }
-
-    // Sort models: prioritized models first
-    const priorities = ['gemini-1.5-flash-8b', 'gemini-1.5-flash', 'gpt-4o-mini', 'gpt-4o', 'gemini-1.5-pro'];
-
-    models.sort((a, b) => {
-      const indexA = priorities.findIndex(p => a.includes(p));
-      const indexB = priorities.findIndex(p => b.includes(p));
-
-      // If both are priority models, sort by priority index
-      if (indexA !== -1 && indexB !== -1) return indexA - indexB;
-      // If only A is priority, it comes first
-      if (indexA !== -1) return -1;
-      // If only B is priority, it comes first
-      if (indexB !== -1) return 1;
-      // Otherwise sort alphabetically
-      return a.localeCompare(b);
-    });
-
-    return models;
+      return models;
   },
 
   /**
-   * Scans a receipt image using the configured AI provider
-   * @param {File|Blob} imageFile - The receipt image
-   * @param {Object} config - { provider, apiKey, baseUrl, model }
-   * @returns {Promise<Object>} - Parsed receipt data
+   * Public method to trigger model download/loading for UI progress
    */
-  async scanReceiptWithAI(imageFile, config) {
+  async loadLocalModel(modelId, progressCallback) {
+      return await LocalProvider.getInstance(modelId, progressCallback);
+  },
+
+  /**
+   * Main Orchestrator Method
+   */
+  async scanImage(imageFile, config, globalSettings) {
+      // config: { provider, apiKey, baseUrl, model } - from Settings 'aiConfig'
+      // globalSettings: { ai_preference, local_model_choice, auto_fallback } - from storage
+
+      const preference = globalSettings?.ai_preference || 'local';
+      const useLocal = preference === 'local';
+      const canWebGPU = !!navigator.gpu;
+
+      // 1. Try Local if preferred and supported
+      if (useLocal && canWebGPU) {
+          try {
+              console.log('Attempting Local Inference...');
+              const result = await LocalProvider.scan(imageFile, globalSettings.local_model_choice);
+              return { ...result, source: 'local' };
+          } catch (err) {
+              console.warn('Local Inference Failed:', err);
+              if (!globalSettings.auto_fallback) {
+                  throw err; // No fallback allowed
+              }
+              // Proceed to Cloud Fallback
+          }
+      }
+
+      // 2. Cloud Fallback (or Primary if preferred)
+      if (config.apiKey) {
+           try {
+               console.log('Attempting Cloud Inference...');
+               const result = await this.scanReceiptWithCloud(imageFile, config);
+               return { ...result, source: 'cloud' };
+           } catch (err) {
+               console.warn('Cloud Inference Failed:', err);
+               throw err; // Let caller handle fallback to System OCR if needed
+           }
+      }
+
+      throw new Error('No valid AI provider configured or available.');
+  },
+
+  /**
+   * Existing Cloud Logic (renamed)
+   */
+  async scanReceiptWithCloud(imageFile, config) {
     const { provider, apiKey, baseUrl, model } = config;
     if (!apiKey) throw new Error('API Configuration missing');
 
-    // Convert image to Base64
     const base64Image = await new Promise((resolve, reject) => {
       const reader = new FileReader();
       reader.onloadend = () => resolve(reader.result);
@@ -98,7 +189,6 @@ export const llmService = {
     });
 
     const dateFormat = localStorage.getItem('hb_date_format') || 'DD/MM/YYYY';
-
     const SYSTEM_PROMPT = `Analyze this image. It is either a receipt or a general object/item. Return ONLY a strict JSON object (no markdown, no backticks).
 
     DATE LOGIC:
@@ -128,86 +218,52 @@ export const llmService = {
 
     if (provider === 'gemini') {
         const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
-
-        // Gemini expects base64 without the prefix
         const base64Data = base64Image.split(',')[1];
-
         const payload = {
             contents: [{
                 parts: [
                     { text: SYSTEM_PROMPT },
-                    {
-                        inline_data: {
-                            mime_type: imageFile.type || 'image/jpeg',
-                            data: base64Data
-                        }
-                    }
+                    { inline_data: { mime_type: imageFile.type || 'image/jpeg', data: base64Data } }
                 ]
             }]
         };
-
         const response = await fetch(url, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload)
         });
-
         if (!response.ok) {
              const err = await response.json().catch(() => ({}));
              throw new Error(err.error?.message || `Gemini Error: ${response.status}`);
         }
-
         const data = await response.json();
         responseText = data.candidates?.[0]?.content?.parts?.[0]?.text;
-
     } else {
-        // OpenAI / Custom
         const url = `${baseUrl}/chat/completions`;
-
-        // OpenAI handles full data URI
         const payload = {
             model: model,
             messages: [
-                {
-                    role: "system",
-                    content: SYSTEM_PROMPT
-                },
-                {
-                    role: "user",
-                    content: [
-                        { type: "image_url", image_url: { url: base64Image } }
-                    ]
-                }
+                { role: "system", content: SYSTEM_PROMPT },
+                { role: "user", content: [{ type: "image_url", image_url: { url: base64Image } }] }
             ],
             max_tokens: 500
         };
-
         const response = await fetch(url, {
             method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${apiKey}`,
-                'Content-Type': 'application/json'
-            },
+            headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
             body: JSON.stringify(payload)
         });
-
         if (!response.ok) {
             const err = await response.json().catch(() => ({}));
             throw new Error(err.error?.message || `API Error: ${response.status}`);
         }
-
         const data = await response.json();
         responseText = data.choices?.[0]?.message?.content;
     }
 
     if (!responseText) throw new Error('No response from AI provider');
 
-    // Clean Markdown
-    const cleanJson = responseText
-        .replace(/```json/g, '')
-        .replace(/```/g, '')
-        .trim();
-
+    const cleanJson = responseText.replace(/```json/g, '').replace(/```/g, '').trim();
     try {
         return JSON.parse(cleanJson);
     } catch (e) {

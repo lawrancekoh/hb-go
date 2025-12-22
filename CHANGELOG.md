@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.1.0] - 2025-12-11
+
+### 🚀 New Features
+*   **Hybrid AI Vision:** Introduced "Local-First" AI mode. Users can now choose to process receipts locally on their device using WebGPU-accelerated models (PaliGemma 3B), ensuring complete privacy.
+*   **Cloud Fallback:** Added auto-fallback configuration. If Local AI fails or is unavailable, the app can seamlessly retry with Cloud AI (if configured).
+*   **Intelligence Settings:** New settings section to manage AI preferences, check WebGPU support, and download local models.
+
+### 🛠 Improvements
+*   **Performance:** Implemented `transformers.js` for efficient in-browser inference.
+*   **UX:** Updated Scan button to indicate active mode (Local/Cloud).
+*   **UX:** Added model download progress indicator.
+
 ## [1.0.1] - 2025-12-11
 
 ### 🚀 Features

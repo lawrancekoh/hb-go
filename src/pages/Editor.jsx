@@ -6,7 +6,7 @@ import { formatMemo } from '../services/ocrUtils';
 import { llmService } from '../services/llm';
 import { matchingService } from '../services/matching';
 import { getToday, getCurrentTime, validateDate, validateTime } from '../services/dateUtils';
-import { ArrowLeft, Save, Loader2, Camera, Upload, X, Sparkles } from 'lucide-react';
+import { ArrowLeft, Save, Loader2, Camera, Upload, X, Sparkles, Cpu, Cloud, Scan } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { Label } from '../components/ui/Label';
@@ -39,6 +39,7 @@ function Editor() {
   const [aiConfig, setAiConfig] = useState(null);
   const [croppingImage, setCroppingImage] = useState(null); // Base64 of image being cropped
   const [existingTags, setExistingTags] = useState([]); // Loaded from local storage
+  const [activeScanMode, setActiveScanMode] = useState('manual'); // 'manual', 'local', 'cloud'
 
   const amountInputRef = useRef(null);
 
@@ -68,6 +69,17 @@ function Editor() {
             setAiConfig(JSON.parse(storedAiConfig));
         }
 
+        // Determine Active Scan Mode for UI Label
+        const settings = await storageService.getSettings();
+        const pref = settings.ai_preference || 'local';
+        if (pref === 'local' && navigator.gpu) {
+            setActiveScanMode('local');
+        } else if (pref === 'cloud' || (pref === 'local' && !navigator.gpu && settings.auto_fallback && storedAiConfig)) {
+            setActiveScanMode('cloud');
+        } else {
+            setActiveScanMode('manual');
+        }
+
         if (id && id !== 'new') {
             const transaction = await storageService.getTransaction(id);
             if (transaction) {
@@ -88,7 +100,6 @@ function Editor() {
                 if (transaction.image) setPreviewUrl(transaction.image);
             }
         } else {
-            const settings = await storageService.getSettings();
             const updates = {};
 
             if (settings.defaultTag) {
@@ -115,9 +126,15 @@ function Editor() {
   };
 
   const performAiScan = async (fileToScan) => {
-      setOcrStatus('AI Analyzing...');
       try {
-           const result = await llmService.scanReceiptWithAI(fileToScan, aiConfig);
+           const settings = await storageService.getSettings();
+           const result = await llmService.scanImage(fileToScan, aiConfig, settings);
+
+           if (result.source === 'local') {
+               setOcrStatus('Local AI Success');
+           } else {
+               setOcrStatus('Cloud AI Success');
+           }
 
           // Smart match payee
           let bestPayee = result.merchant || '';
@@ -136,13 +153,6 @@ function Editor() {
 
           // Priority: AI Match > Default > Empty
           const bestCategory = matchedCategory || defaultCategory;
-
-          console.log("AI Category Debug:", {
-              rawGuess: aiGuess,
-              matched: matchedCategory,
-              userDefault: defaultCategory,
-              final: bestCategory
-          });
 
           // Format Memo
           const formattedMemo = formatMemo({
@@ -211,7 +221,6 @@ function Editor() {
               tags: finalTags || prev.tags
           }));
 
-          setOcrStatus('AI Success');
       } catch (err) {
           console.error("AI Scan Error:", err);
           setOcrStatus('AI Error');
@@ -253,7 +262,6 @@ function Editor() {
   const processFile = async (file, isPdf = false) => {
       setIsProcessing(true);
       setOcrStatus('Initializing...');
-      // fileObject removed as it was unused
 
       try {
           let fileToProcess = file;
@@ -279,12 +287,20 @@ function Editor() {
 
           setPreviewUrl(previewData);
 
-          // Check if AI should be used
-          if (aiConfig && aiConfig.apiKey) {
-              await performAiScan(fileToProcess);
+          // Determine Strategy
+          const settings = await storageService.getSettings();
+          const preference = settings.ai_preference || 'local';
+
+          if (preference !== 'none') {
+               if (preference === 'local') {
+                   setOcrStatus('Inference in progress (Local AI)...');
+               } else {
+                   setOcrStatus('Inference in progress (Cloud AI)...');
+               }
+               await performAiScan(fileToProcess);
           } else {
+              // Standard OCR Fallback
               setOcrStatus('Reading text...');
-              const settings = await storageService.getSettings();
               const strategy = settings.ocrProvider || 'auto';
 
               const text = await ocrService.recognize(fileToProcess, (m) => {
@@ -344,7 +360,7 @@ function Editor() {
       } finally {
           setIsProcessing(false);
           setTimeout(() => {
-             setOcrStatus((prev) => prev === 'Done' || prev === 'AI Success' ? '' : prev);
+             setOcrStatus((prev) => prev === 'Done' || prev === 'Local AI Success' || prev === 'Cloud AI Success' ? '' : prev);
           }, 2000);
       }
   };
@@ -352,7 +368,6 @@ function Editor() {
   const handleClearImage = (e) => {
       e.preventDefault();
       setPreviewUrl(null);
-      // setFileObject(null); // removed
   };
 
   const handleSubmit = async (e) => {
@@ -446,22 +461,25 @@ function Editor() {
                   ) : (
                       <div className="text-center p-6 relative">
                            {/* AI Badge */}
-                           {aiConfig && (
-                               <div className="absolute -top-2 left-1/2 -translate-x-1/2 bg-brand-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm flex items-center gap-1">
-                                   <Sparkles className="h-3 w-3" /> AI READY
+                           {activeScanMode !== 'manual' && (
+                               <div className={cn(
+                                   "absolute -top-2 left-1/2 -translate-x-1/2 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm flex items-center gap-1",
+                                   activeScanMode === 'local' ? "bg-indigo-600" : "bg-blue-600"
+                               )}>
+                                   {activeScanMode === 'local' ? <Cpu className="h-3 w-3" /> : <Cloud className="h-3 w-3" />}
+                                   {activeScanMode === 'local' ? "LOCAL AI" : "CLOUD AI"}
                                </div>
                            )}
 
                            <div className="bg-white p-4 rounded-full shadow-sm inline-flex mb-4 relative dark:bg-slate-700">
-                                <Camera className="h-8 w-8 text-brand-600 dark:text-brand-400" />
-                                {aiConfig && (
-                                    <div className="absolute -top-1 -right-1 bg-brand-600 text-white rounded-full p-1 border-2 border-white dark:border-slate-700">
-                                        <Sparkles className="h-3 w-3" />
-                                    </div>
+                                {activeScanMode === 'manual' ? (
+                                    <Scan className="h-8 w-8 text-slate-400 dark:text-slate-500" />
+                                ) : (
+                                    <Camera className="h-8 w-8 text-brand-600 dark:text-brand-400" />
                                 )}
                            </div>
                            <p className="font-medium text-slate-900 dark:text-slate-100">
-                               {aiConfig ? "Scan a receipt, or snap a photo of the item!" : "Tap to Scan Receipt"}
+                               {activeScanMode === 'manual' ? "Tap to Scan (OCR)" : "Tap to Scan & Analyze"}
                            </p>
                            <p className="text-xs text-slate-500 mt-1 dark:text-slate-400">Supports Image & PDF</p>
                       </div>
@@ -490,7 +508,7 @@ function Editor() {
                {/* Mobile: Show OCR status below image if not processing but recently finished */}
                {!isProcessing && ocrStatus && (
                   <div className="text-xs text-center text-emerald-600 font-medium bg-emerald-50 py-1 rounded dark:bg-emerald-900/30 dark:text-emerald-400">
-                      OCR: {ocrStatus}
+                      {ocrStatus}
                   </div>
                )}
           </div>

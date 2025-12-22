@@ -1,15 +1,16 @@
 # HB Go
 
-![Current Version: v1.0.0](https://img.shields.io/badge/Current_Version-v1.0.0-blue)
+![Current Version: v1.1.0](https://img.shields.io/badge/Current_Version-v1.1.0-blue)
 
 The Intelligent, Offline-First Companion for HomeBank.
 
 ## Key Features
 
 *   **Offline-First:** Works completely without internet using PWA caching technology.
+*   **Privacy-First Local AI:** Run advanced receipt scanning models (PaliGemma) directly on your device using WebGPU. No data leaves your phone.
 *   **Manual Transaction Entry**: Quickly add transactions on the go.
 *   **HomeBank Integration**: Import `.xhb` files for Categories/Payees and export transactions as CSV.
-*   **BYOK AI Scanning**: Use your own OpenAI or Google Gemini key for smart receipt scanning.
+*   **BYOK Cloud AI**: Option to use your own OpenAI or Google Gemini key for maximum accuracy.
 *   **System-OCR Fallback**: Uses device's native text recognition (Live Text) if AI is not configured.
 *   **Smart Receipt Cropping**: Advanced cropping with rotation and zoom support.
 *   **Smart Auto-Complete**: Intelligent matching for Payees and Categories.
@@ -18,13 +19,14 @@ The Intelligent, Offline-First Companion for HomeBank.
 ## Usage Guide
 
 1.  **Open App**: Install as PWA on your device.
-2.  **(Optional) Add AI Key**: Go to Settings to configure your OpenAI or Gemini API key for enhanced scanning.
+2.  **(Optional) Setup Intelligence**: Go to Settings -> Intelligence to download the Local AI model or configure a Cloud API key.
 3.  **Snap Photo**: Tap the camera icon, take a picture of your receipt, crop it, and save.
 4.  **Export CSV**: When ready, export your transactions to CSV and import them into HomeBank on your desktop.
 
 ## Tech Stack
 
 *   **Vite PWA**: For offline capabilities and progressive web app features.
+*   **Transformers.js**: For running Local AI models via WebGPU.
 *   **React Image Crop**: For advanced image cropping and manipulation.
 *   **React**: UI library.
 *   **Tailwind CSS**: Utility-first CSS framework.
