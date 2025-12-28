@@ -90,6 +90,31 @@ function Home() {
 
   const totalAmount = transactions.reduce((sum, t) => sum + parseFloat(t.amount || 0), 0);
 
+  // Helper function for date headers
+  const formatDateHeader = (dateStr) => {
+    if (!dateStr) return 'Unknown Date';
+
+    // We treat the dateStr (YYYY-MM-DD) as a local date.
+    const [y, m, d] = dateStr.split('-').map(Number);
+    const date = new Date(y, m - 1, d);
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const diffTime = today - date;
+    const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
+
+    if (diffDays === 0) return 'Today';
+    if (diffDays === 1) return 'Yesterday';
+
+    return new Intl.DateTimeFormat('en-US', {
+        weekday: 'short',
+        month: 'short',
+        day: 'numeric',
+        year: date.getFullYear() !== today.getFullYear() ? 'numeric' : undefined
+    }).format(date);
+  };
+
   return (
     <div className="flex flex-col gap-6 pb-20 relative min-h-[80vh]">
 
@@ -164,47 +189,58 @@ function Home() {
             </p>
           </Link>
         ) : (
-          transactions.map(t => (
-            <div key={t.id} onClick={() => navigate(`/editor/${t.id}`)} className="cursor-pointer group">
-                <Card className="hover:shadow-md transition-shadow duration-200 border-l-4 border-l-transparent hover:border-l-brand-600 dark:hover:border-l-brand-400">
-                    <CardContent className="p-4 flex justify-between items-center">
-                        <div className="flex gap-4 items-center overflow-hidden">
-                             {/* Category Icon / Placeholder */}
-                            <div className="h-10 w-10 rounded-full bg-slate-100 flex items-center justify-center flex-shrink-0 text-slate-500 dark:bg-slate-800 dark:text-slate-400">
-                                {t.image ? (
-                                     <img src={t.image} className="h-full w-full object-cover rounded-full" alt="Receipt" />
-                                ) : (
-                                    <Tag className="h-5 w-5" />
-                                )}
+          transactions.map((t, index) => {
+            const showHeader = index === 0 || t.date !== transactions[index - 1].date;
+
+            return (
+              <div key={t.id}>
+                {showHeader && (
+                    <h3 className="text-xs font-bold text-slate-500/80 uppercase tracking-wider mt-6 mb-2 pl-1 dark:text-slate-400/80">
+                        {formatDateHeader(t.date)}
+                    </h3>
+                )}
+                <div onClick={() => navigate(`/editor/${t.id}`)} className="cursor-pointer group">
+                    <Card className="hover:shadow-md transition-shadow duration-200 border-l-4 border-l-transparent hover:border-l-brand-600 dark:hover:border-l-brand-400">
+                        <CardContent className="p-4 flex justify-between items-center">
+                            <div className="flex gap-4 items-center overflow-hidden">
+                                {/* Category Icon / Placeholder */}
+                                <div className="h-10 w-10 rounded-full bg-slate-100 flex items-center justify-center flex-shrink-0 text-slate-500 dark:bg-slate-800 dark:text-slate-400">
+                                    {t.image ? (
+                                        <img src={t.image} className="h-full w-full object-cover rounded-full" alt="Receipt" />
+                                    ) : (
+                                        <Tag className="h-5 w-5" />
+                                    )}
+                                </div>
+
+                                <div className="min-w-0">
+                                    <h3 className="font-semibold text-slate-900 truncate dark:text-slate-100">{t.payee || 'Unknown Payee'}</h3>
+                                    <p className="text-xs text-slate-500 truncate flex items-center gap-1 dark:text-slate-400">
+                                        {t.date}
+                                        {t.time && <span>• {t.time}</span>}
+                                        {t.category && <span className="bg-slate-100 px-1.5 py-0.5 rounded text-slate-600 ml-1 dark:bg-slate-800 dark:text-slate-300">{t.category}</span>}
+                                    </p>
+                                </div>
                             </div>
 
-                            <div className="min-w-0">
-                                <h3 className="font-semibold text-slate-900 truncate dark:text-slate-100">{t.payee || 'Unknown Payee'}</h3>
-                                <p className="text-xs text-slate-500 truncate flex items-center gap-1 dark:text-slate-400">
-                                    {t.date}
-                                    {t.time && <span>• {t.time}</span>}
-                                    {t.category && <span className="bg-slate-100 px-1.5 py-0.5 rounded text-slate-600 ml-1 dark:bg-slate-800 dark:text-slate-300">{t.category}</span>}
-                                </p>
+                            <div className="flex flex-col items-end gap-1">
+                                <span className="font-bold text-slate-900 text-lg dark:text-slate-100">
+                                    {parseFloat(t.amount).toFixed(2)}
+                                </span>
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-8 w-8 text-slate-400 hover:text-red-600 hover:bg-red-50 -mr-2 dark:text-slate-500 dark:hover:bg-red-900/20 dark:hover:text-red-400"
+                                    onClick={(e) => handleDelete(e, t.id)}
+                                >
+                                    <Trash2 className="h-4 w-4" />
+                                </Button>
                             </div>
-                        </div>
-
-                        <div className="flex flex-col items-end gap-1">
-                            <span className="font-bold text-slate-900 text-lg dark:text-slate-100">
-                                {parseFloat(t.amount).toFixed(2)}
-                            </span>
-                            <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-8 w-8 text-slate-400 hover:text-red-600 hover:bg-red-50 -mr-2 dark:text-slate-500 dark:hover:bg-red-900/20 dark:hover:text-red-400"
-                                onClick={(e) => handleDelete(e, t.id)}
-                            >
-                                <Trash2 className="h-4 w-4" />
-                            </Button>
-                        </div>
-                    </CardContent>
-                </Card>
-            </div>
-          ))
+                        </CardContent>
+                    </Card>
+                </div>
+              </div>
+            );
+          })
         )}
       </div>
 
