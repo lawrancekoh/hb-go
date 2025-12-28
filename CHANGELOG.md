@@ -1,5 +1,10 @@
 # Changelog
 
+## [Unreleased]
+
+### 🚀 Features
+*   **UI:** Added minimalistic day separators to the transaction timeline.
+
 ## [1.0.1] - 2025-12-11
 
 ### 🚀 Features
