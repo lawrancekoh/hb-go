@@ -31,7 +31,7 @@ export const csvService = {
         t.date, // YYYY-MM-DD
         '0', // Mode (0=None)
         '', // Info
-        escape(t.payee),
+        escape(t.payee), // Handles null/undefined/empty string
         escape(memo),
         amount.toFixed(2),
         escape(t.category),

@@ -540,7 +540,6 @@ function Editor() {
                         onChange={handleChange}
                         list="payee-list"
                         placeholder="Merchant Name"
-                        required
                         autoComplete="off"
                         className="dark:text-slate-100 pr-10"
                       />
