@@ -2,8 +2,11 @@
 
 ## [Unreleased]
 
+## [1.0.2] - 2025-12-30
+
 ### 🚀 Features
 *   **UI:** Added minimalistic day separators to the transaction timeline.
+*   **Editor:** Allow saving transactions with an empty Payee field.
 
 ## [1.0.1] - 2025-12-11
 
