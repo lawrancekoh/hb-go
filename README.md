@@ -1,6 +1,6 @@
 # HB Go
 
-![Current Version: v1.0.0](https://img.shields.io/badge/Current_Version-v1.0.0-blue)
+![Current Version: v1.0.2](https://img.shields.io/badge/Current_Version-v1.0.2-blue)
 
 The Intelligent, Offline-First Companion for HomeBank.
 
@@ -9,10 +9,12 @@ The Intelligent, Offline-First Companion for HomeBank.
 *   **Offline-First:** Works completely without internet using PWA caching technology.
 *   **Manual Transaction Entry**: Quickly add transactions on the go.
 *   **HomeBank Integration**: Import `.xhb` files for Categories/Payees and export transactions as CSV.
+*   **Native Share Sheet**: Direct export to Drive/OneDrive on mobile.
 *   **BYOK AI Scanning**: Use your own OpenAI or Google Gemini key for smart receipt scanning.
 *   **System-OCR Fallback**: Uses device's native text recognition (Live Text) if AI is not configured.
 *   **Smart Receipt Cropping**: Advanced cropping with rotation and zoom support.
 *   **Smart Auto-Complete**: Intelligent matching for Payees and Categories.
+*   **UI minimalistic day separators**: Improved timeline visualization.
 *   **Onboarding Wizard**: Easy setup for new users.
 
 ## Usage Guide

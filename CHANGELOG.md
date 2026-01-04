@@ -2,7 +2,7 @@
 
 ## [Unreleased]
 
-## [1.0.2] - 2025-12-30
+## [1.0.2] - 2026-01-04
 
 ### 🚀 Features
 *   **UI:** Added minimalistic day separators to the transaction timeline.
