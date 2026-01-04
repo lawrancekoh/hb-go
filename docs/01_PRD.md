@@ -2,7 +2,7 @@
 
 **Project Name:** HB Go
 **Type:** Progressive Web Application (PWA)
-**Version:** 1.0.0
+**Version:** 1.0.2
 **Tagline:** "Scan. Tag. Export."
 **Icon Style:** Variant 2 (Fast Forward)
 **Repository & Hosting:** GitHub / GitHub Pages
