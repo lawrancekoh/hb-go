@@ -52,6 +52,15 @@ export const storageService = {
     return data || { categories: [], accounts: [], payees: [] };
   },
 
+  getSharedImage: async () => {
+    const file = await (await dbPromise).get(STORE_CACHE, 'shared_image');
+    return file;
+  },
+
+  clearSharedImage: async () => {
+    await (await dbPromise).delete(STORE_CACHE, 'shared_image');
+  },
+
   clearAll: async () => {
       const db = await dbPromise;
       await db.clear(STORE_TRANSACTIONS);

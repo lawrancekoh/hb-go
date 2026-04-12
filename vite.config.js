@@ -14,6 +14,9 @@ export default defineConfig({
     VitePWA({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.png', 'robots.txt', 'icons/*.png'],
+      strategies: 'injectManifest',
+      srcDir: 'src',
+      filename: 'sw.js',
       manifest: {
         name: 'HB Go',
         short_name: 'HB Go',
@@ -33,7 +36,23 @@ export default defineConfig({
             sizes: '512x512',
             type: 'image/png'
           }
-        ]
+        ],
+        share_target: {
+          action: '/hb-go/share-target',
+          method: 'POST',
+          enctype: 'multipart/form-data',
+          params: {
+            title: 'title',
+            text: 'text',
+            url: 'url',
+            files: [
+              {
+                name: 'image',
+                accept: ['image/*', 'application/pdf']
+              }
+            ]
+          }
+        }
       }
     })
   ],
