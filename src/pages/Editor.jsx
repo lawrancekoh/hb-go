@@ -129,10 +129,10 @@ function Editor() {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const performAiScan = async (fileToScan) => {
+  const performAiScan = async (fileToScan, currentAiConfig = aiConfig) => {
       setOcrStatus('AI Analyzing...');
       try {
-           const result = await llmService.scanReceiptWithAI(fileToScan, aiConfig);
+           const result = await llmService.scanReceiptWithAI(fileToScan, currentAiConfig);
 
           // Smart match payee
           let bestPayee = result.merchant || '';
@@ -294,9 +294,13 @@ function Editor() {
 
           setPreviewUrl(previewData);
 
-          // Check if AI should be used
-          if (aiConfig && aiConfig.apiKey) {
-              await performAiScan(fileToProcess);
+          // Check if AI should be used (handling stale closures on mount)
+          const storedAiConfigStr = localStorage.getItem('hb_ai_config');
+          const currentAiConfig = aiConfig || (storedAiConfigStr ? JSON.parse(storedAiConfigStr) : null);
+
+          if (currentAiConfig && currentAiConfig.apiKey) {
+              // Pass the current config to performAiScan explicitly
+              await performAiScan(fileToProcess, currentAiConfig);
           } else {
               setOcrStatus('Reading text...');
               const settings = await storageService.getSettings();
