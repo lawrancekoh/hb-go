@@ -1,4 +1,4 @@
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useState, useEffect, useRef } from 'react';
 import { storageService } from '../services/storage';
 import { ocrService } from '../services/ocr';
@@ -17,6 +17,7 @@ import ImageCropper from '../components/ImageCropper';
 function Editor() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
 
   // State
   const [formData, setFormData] = useState({
@@ -105,9 +106,23 @@ function Editor() {
                 setFormData(prev => ({ ...prev, ...updates }));
             }
         }
+
+        // Handle Web Share Target
+        if (id === 'new' && location.search.includes('shared=true')) {
+            const sharedImage = await storageService.getSharedImage();
+            if (sharedImage) {
+                await storageService.clearSharedImage();
+                // Pass it to processFile immediately
+                // Wait for the next tick so the component fully mounts before updating state heavily
+                setTimeout(() => {
+                    processFile(sharedImage, sharedImage.type === 'application/pdf');
+                }, 100);
+            }
+        }
     };
     loadData();
-  }, [id]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id, location.search]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
