@@ -103,11 +103,12 @@ export const llmService = {
 
     DATE LOGIC:
     1. Search strictly for **visible text** resembling a date on a receipt/document within the image.
-    2. If a receipt date is found, extract it using the format **${dateFormat}**.
-    3. If **NO text date** is visible (e.g., photo of a food item, coffee cup, or object), return null. **DO NOT** guess today's date.
+    2. Use the user's preferred format (**${dateFormat}**) ONLY to resolve ambiguous dates (e.g. 01/02 = Feb 1st or Jan 2nd).
+    3. You MUST always output the final extracted date strictly in **YYYY-MM-DD** format.
+    4. If **NO text date** is visible (e.g., photo of a food item, coffee cup, or object), return null. **DO NOT** guess today's date.
 
     1. If it is a RECEIPT:
-       - Extract: date (YYYY-MM-DD, see DATE LOGIC above), time (HH:MM), merchant (string), amount (number, total only), currency (symbol).
+       - Extract: date (MUST be YYYY-MM-DD, see DATE LOGIC above), time (HH:MM), merchant (string), amount (number, total only), currency (symbol).
        - category_guess: derived from merchant.
        - payment_method: string (e.g. Visa, Cash, Amex).
        - items_summary: string, max 5 words summary of items.
