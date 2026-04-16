@@ -90,6 +90,13 @@ function Home() {
 
   const totalAmount = transactions.reduce((sum, t) => sum + parseFloat(t.amount || 0), 0);
 
+  const dailySubtotals = transactions.reduce((acc, t) => {
+    const date = t.date || 'Unknown Date';
+    if (!acc[date]) acc[date] = 0;
+    acc[date] += parseFloat(t.amount || 0);
+    return acc;
+  }, {});
+
   // Helper function for date headers
   const formatDateHeader = (dateStr) => {
     if (!dateStr) return 'Unknown Date';
@@ -195,9 +202,14 @@ function Home() {
             return (
               <div key={t.id}>
                 {showHeader && (
-                    <h3 className="text-xs font-bold text-slate-500/80 uppercase tracking-wider mt-6 mb-2 pl-1 dark:text-slate-400/80">
-                        {formatDateHeader(t.date)}
-                    </h3>
+                    <div className="flex justify-between items-center mt-6 mb-2 pl-1 pr-1">
+                        <h3 className="text-xs font-bold text-slate-500/80 uppercase tracking-wider dark:text-slate-400/80">
+                            {formatDateHeader(t.date)}
+                        </h3>
+                        <span className="text-xs font-bold text-slate-500/80 dark:text-slate-400/80">
+                            {(dailySubtotals[t.date || 'Unknown Date'] || 0) < 0 ? '-' : ''}${(Math.abs(dailySubtotals[t.date || 'Unknown Date'] || 0)).toFixed(2)}
+                        </span>
+                    </div>
                 )}
                 <div onClick={() => navigate(`/editor/${t.id}`)} className="cursor-pointer group">
                     <Card className="hover:shadow-md transition-shadow duration-200 border-l-4 border-l-transparent hover:border-l-brand-600 dark:hover:border-l-brand-400">
